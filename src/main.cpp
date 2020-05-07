@@ -32,7 +32,6 @@ struct Edge {
     }
 };
 
-
 // Edge weight for the WD algorithm which is the pair (w(e), -d(u))
 struct WDEdgeWeight { 
     int weight; //w(e)
