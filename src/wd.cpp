@@ -7,30 +7,9 @@
 #include <boost/graph/graphviz.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
 
+#include "types.h"
+
 using namespace boost;
-
-
-struct Vertex {
-    int weight;
-
-    Vertex() {}
-
-    Vertex(int weight) {
-        this->weight = weight;
-    }
-};
-
-struct Edge {
-    int from;
-    int to;
-    int weight;
-
-    Edge(int from, int to, int weight) {
-        this->from = from;
-        this->to = to;
-        this->weight = weight;
-    }
-};
 
 // Edge weight for the WD algorithm which is the pair (w(e), -d(u))
 struct WDEdgeWeight { 
@@ -65,25 +44,23 @@ struct WDEdgeWeight {
     }
 };
 
-//packs a WD pair
-struct WDEntry {
-    int W;
-    int D;
-};
-
-//typedef the graph
-typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> Graph;
-
 /**
  * WD ALGORITHM
  * Internally builds a bgl graph from the provided vertices and edges.
  * The edges built into the graph are weighted according to the WD algorithm requirements.
  * Returns a WDEntry matrix.
  */
-WDEntry* wd_algorithm(Vertex* vertices, Edge* edges, const int vertex_count, const int edge_count) {
+WDEntry* wd_algorithm(Graph &graph) {
+    //typedef the graph
+    typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> BGLGraph;
+
+    Edge* edges = graph.edges;
+    Vertex* vertices = graph.vertices;
+    int vertex_count = graph.vertex_count;
+    int edge_count = graph.edge_count;
 
     //create graph
-    Graph g(vertex_count);
+    BGLGraph g(vertex_count);
 
     //add properties to vertices
     /*
@@ -107,7 +84,7 @@ WDEntry* wd_algorithm(Vertex* vertices, Edge* edges, const int vertex_count, con
     }
 
     std::cout << "EDGES:" << std::endl; 
-    graph_traits<Graph>::edge_iterator ei, ei_end;
+    graph_traits<BGLGraph>::edge_iterator ei, ei_end;
     for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
         std::cout << source(*ei, g) << " -> " << target(*ei, g)
             << " [weight: " << get(edge_weight, g)[*ei].weight << "]" << std::endl;
@@ -125,6 +102,7 @@ WDEntry* wd_algorithm(Vertex* vertices, Edge* edges, const int vertex_count, con
     //distance matrix, initialized with max value
     std::vector<std::vector<WDEdgeWeight>> D(vertex_count, std::vector<WDEdgeWeight>(vertex_count));
 
+    //call johnson all shortest paths
     johnson_all_pairs_shortest_paths(g, D, distance_inf(max).distance_zero(WDEdgeWeight(0, 0)));
 
     //compute result into a WDEntry matrix
@@ -144,7 +122,7 @@ WDEntry* wd_algorithm(Vertex* vertices, Edge* edges, const int vertex_count, con
 }
 
 
-int main() {
+int _main() {
 
     //Correlator1
     const int vertex_count = 8;
@@ -175,7 +153,9 @@ int main() {
         Edge(7, 0, 0),
     };
 
-    WDEntry* WD = wd_algorithm(vertices, edges, vertex_count, edge_count);
+    Graph graph(vertices, edges, vertex_count, edge_count);
+
+    WDEntry* WD = wd_algorithm(graph);
 
     //print result
     std::cout << "---- W ----" << std::endl;
@@ -203,5 +183,6 @@ int main() {
         }
         std::cout << std::endl;
     }
-
+    
+    free(WD);
 }
