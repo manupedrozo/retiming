@@ -1,6 +1,8 @@
 #ifndef TYPES
 #define TYPES
 
+#include "stdlib.h"
+
 struct Vertex {
     int weight;
 

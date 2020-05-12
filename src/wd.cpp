@@ -1,11 +1,11 @@
-#include <boost/config.hpp>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <vector>
+#ifndef WDALG
+#define WDALG
+
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/graphviz.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 #include "types.h"
 
@@ -122,7 +122,7 @@ WDEntry* wd_algorithm(Graph &graph) {
 }
 
 
-int _main() {
+int main_wd() {
 
     //Correlator1
     const int vertex_count = 8;
@@ -185,4 +185,8 @@ int _main() {
     }
     
     free(WD);
+
+    return 0;
 }
+
+#endif

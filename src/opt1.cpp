@@ -1,13 +1,16 @@
-#include <boost/config.hpp>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
+#ifndef OPT1ALG
+#define OPT1ALG
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
+#include <iomanip>
+#include <iostream>
+#include <set>
 
 #include "types.h"
 #include "wd.cpp" 
+
+//#define OPT1DEBUG
 
 using namespace boost;
 
@@ -42,7 +45,165 @@ BellmanResult bellman(Graph &graph, const int root_vertex) {
     return {r, distance};
 }
 
-int main() {
+struct OptResult {
+    bool r; //retiming found
+    Graph graph; //retimed graph
+};
+
+/**
+ * OPT1 ALGORITHM
+ * Uses Bellman.
+ * Returns an OptResult.
+ */
+OptResult opt1(Graph &graph, WDEntry *WD) {
+
+    int vertex_count = graph.vertex_count;
+    int edge_count = graph.edge_count;
+    Edge *edges = graph.edges;
+    Vertex *vertices = graph.vertices;
+
+    WDEntry entry;
+
+    //Get different c values from D(u,v)
+    int* c_candidates;
+    int c_count;
+    {
+        std::set<int> c_candidates_set;
+        for (int u = 0; u < vertex_count; ++u) {
+            for (int v = 0; v < vertex_count; ++v) {
+                entry = WD[u * vertex_count + v];
+                c_candidates_set.insert(entry.D);
+            }
+        }
+        c_count = c_candidates_set.size();
+        c_candidates = (int *) malloc(sizeof(int) * c_count);
+        int k = 0;
+        for (int c: c_candidates_set) {
+            c_candidates[k] = c;
+            ++k;
+        }
+    }
+
+    //Get edges for 7.1 (the same for every c)
+    Edge *opt_edges1 = (Edge *) malloc(sizeof(Edge) * edge_count);
+    for (int i = 0; i < edge_count; ++i) {
+        opt_edges1[i] = Edge(edges[i].to, edges[i].from, edges[i].weight);
+    }
+
+    int c = -1; //best c
+    int *distance = nullptr;//distance array of best c
+
+    //Binary search ordered c values
+    int b, current_c;
+    int bot = 0;
+    int top = c_count;
+    while(bot < top) {
+        b = (top + bot)/2;
+        current_c = c_candidates[b];
+
+        //TODO debug printing
+#ifdef OPT1DEBUG
+        printf("b: %d\t c = %d\n", b, current_c);
+        printf("bot: %d\ttop: %d\n", bot, top);
+#endif
+
+        //Get edges for 7.2
+        std::list<Edge> opt_edges2;
+        for (int u = 0; u < vertex_count; ++u) {
+            for (int v = 0; v < vertex_count; ++v) {
+                entry = WD[u * vertex_count + v];
+                //check the requirements on D(u,v)
+                if(entry.D > current_c && (entry.D - vertices[u].weight <= current_c) && (entry.D - vertices[v].weight <= current_c)) {
+                    //add the edge v -> u with weight W(u, v) - 1
+                    opt_edges2.push_front(Edge(v, u, entry.W - 1));
+                }
+            }
+        }
+
+        //Merge edges into a single array
+        int opt_edge_count = edge_count + opt_edges2.size();
+        //probably wanna resize the same opt_edges instead of fully allocating each pass
+        Edge *opt_edges = (Edge *) malloc(sizeof(Edge) * opt_edge_count);
+        int k;
+        for (k = 0; k < edge_count; ++k) {
+            opt_edges[k] = opt_edges1[k];
+        }
+
+        for (Edge edge : opt_edges2) {
+            opt_edges[k] = edge;
+            ++k;
+        } 
+
+#ifdef OPT1DEBUG
+        printf("--- OPT EDGES --- \n");
+        for (int i = 0; i < opt_edge_count; ++i) {
+        printf("(%d, %d, [%d]) \n", opt_edges[i].from, opt_edges[i].to, opt_edges[i].weight);
+        }
+#endif
+
+        Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
+
+        //Run bellman
+        BellmanResult result = bellman(opt_graph, 0);//root_vertex); 
+
+        free(opt_edges);
+
+        if(result.r) { 
+            top = b - 1;
+
+            //free previous distance array
+            if(distance != nullptr)
+                free(distance);
+
+            //save c and distance array
+            c = current_c;
+            distance = result.distance;
+#ifdef OPT1DEBUG
+            std::cout << "Retiming found" << std::endl; 
+#endif
+        } else {
+            //free useless distance array
+            free(result.distance);
+
+            bot = b + 1;
+#ifdef OPT1DEBUG
+            std::cout << "Negative cycle" << std::endl;
+#endif
+        }
+    }
+
+    //If no retiming was found, return base graph as best retiming.
+    OptResult result = {false, graph};
+
+    if(c >= 0) {
+        //a retiming c was found, make the retimed graph and return.
+
+        //Calculate edge weights of the retimed graph: wr(e) = w(e) + r(v) - r(u)
+        //Reusing opt_edges1
+        Edge *retimed_edges = opt_edges1;
+        for (int i = 0; i < edge_count; ++i) {
+            int from = edges[i].from;
+            int to = edges[i].to;
+            retimed_edges[i] = Edge(from, to, edges[i].weight + distance[to] - distance[from]);
+        }
+
+        //Calculate r(Vi) for each vertex: distance to that vertex.
+        Vertex *retimed_vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
+        for (int i = 0; i < vertex_count; ++i) {
+            retimed_vertices[i] = Vertex(distance[i]);
+        }
+
+        Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);
+        result = {true, retimed};
+    } 
+
+    free(c_candidates);
+    free(distance);
+
+    return result;
+}
+
+int main_opt1() {
     //Correlator1
     const int vertex_count = 8;
     const int edge_count = 11;
@@ -77,97 +238,32 @@ int main() {
 
     WDEntry* WD = wd_algorithm(graph);
 
-    // OPT1 start
+    OptResult result = opt1(graph, WD);
 
-    int c = 13; //Hardcoded for now
-
-    //Binary search D
-    // while(bot < top)
-    // c = c_candidates[b];
-    // do all the edge stuff and bellman
-    // save result.distance as the best so far if result.r = true (no need calculate retimed edges yet, wait until the while is done)
-    // keep going in the search until the while is done, the last saved result is the best one
-
-    //Get edges for 7.1 (the same for every c)
-    Edge *opt_edges1 = (Edge *) malloc(sizeof(Edge) * edge_count);
-    for (int i = 0; i < edge_count; ++i) {
-        opt_edges1[i] = Edge(edges[i].to, edges[i].from, edges[i].weight);
-    }
-
-    //Get edges for 7.2
-    std::list<Edge> opt_edges2;
-    WDEntry entry;
-    for (int u = 0; u < vertex_count; ++u) {
-        for (int v = 0; v < vertex_count; ++v) {
-            entry = WD[u * vertex_count + v];
-            //check the requirements on D(u,v)
-            if(entry.D > c && (entry.D - vertices[u].weight <= c) && (entry.D - vertices[v].weight <= c)) {
-                //add the edge v -> u with weight W(u, v) - 1
-                opt_edges2.push_front(Edge(v, u, entry.W - 1));
-            }
+    if(result.r) {
+        Graph retimed = result.graph;
+        printf("--- RETIMED EDGES --- \n");
+        for (int i = 0; i < edge_count; ++i) {
+            printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
         }
+        printf("--- r(Vi) --- \n");
+        for (int i = 0; i < vertex_count; ++i) {
+            printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
+        }
+
+        free(retimed.vertices);
+        free(retimed.edges);
+    } else {
+        printf("--- No retiming found --- \n");
     }
 
-    //Merge edges into a single array
-    int opt_edge_count = edge_count + opt_edges2.size();
-    Edge *opt_edges = (Edge *) malloc(sizeof(Edge) * opt_edge_count);
-
-    int k;
-    for (k = 0; k < edge_count; ++k) {
-        opt_edges[k] = opt_edges1[k];
-    }
-
-    for (Edge edge : opt_edges2) {
-        opt_edges[k] = edge;
-        ++k;
-    } 
-
-    Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
-
-    BellmanResult result = bellman(opt_graph, root_vertex);
-    int *distance = result.distance;
-
-    if (result.r)
-        for (int i = 0; i < vertex_count; ++i)
-            std::cout << i <<  ": " << std::setw(3) << distance[i] << " " << std::endl;
-    else
-        std::cout << "Negative cycle" << std::endl;
-
-    //Calculate edge weights of the retimed graph: wr(e) = w(e) + r(v) - r(u)
-    //Reusing opt_edges1
-    Edge *retimed_edges = opt_edges1;
-    for (int i = 0; i < edge_count; ++i) {
-        int from = edges[i].from;
-        int to = edges[i].to;
-        retimed_edges[i] = Edge(from, to, edges[i].weight + distance[to] - distance[from]);
-    }
-
-    //return retimed_edges;
-    
-    //OPT1 end
-
-
-    /*
-    */
-    printf("--- OPT EDGES --- \n");
-    for (int i = 0; i < opt_edge_count; ++i) {
-        printf("(%d, %d, [%d]) \n", opt_edges[i].from, opt_edges[i].to, opt_edges[i].weight);
-    }
-
-    printf("--- RETIMED EDGES --- \n");
-    for (int i = 0; i < edge_count; ++i) {
-        printf("(%d, %d, [%d]) \n", retimed_edges[i].from, retimed_edges[i].to, retimed_edges[i].weight);
-    }
-    
-
-    free(distance);
-
+    free(WD);
 
     return 0;
 }
 
 int test_correlator1() {
-    //bgl example
+    //correlator1
     const int vertex_count = 8;
     const int edge_count = 16;
     const int root_vertex = 0;
@@ -268,43 +364,4 @@ int test_bgl_example() {
     return 0;
 }
 
-/*
-{
-    if (r)
-        for (int i = 0; i < N; ++i)
-            std::cout << name[i] << ": " << std::setw(3) << distance[i] << " " << std::endl;
-    else
-        std::cout << "negative cycle" << std::endl;
-
-    //dot stuff
-    std::ofstream dot_file("bellman.dot");
-    dot_file << "digraph D {\n"
-        << "  rankdir=LR\n"
-        << "  size=\"5,3\"\n"
-        << "  ratio=\"fill\"\n"
-        << "  edge[style=\"bold\"]\n" << "  node[shape=\"circle\"]\n";
-
-    {
-
-        graph_traits < BGLGraph >::edge_iterator ei, ei_end;
-
-        for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
-            graph_traits < BGLGraph >::edge_descriptor e = *ei;
-            graph_traits < BGLGraph >::vertex_descriptor
-                u = source(e, g), v = target(e, g);
-            // VC++ doesn't like the 3-argument get function, so here
-            // we workaround by using 2-nested get()'s.
-            dot_file << name[u] << " -> " << name[v]
-                << "[label=\"" << get(get(edge_weight, g), e) << "\"";
-            //if (parent[v] == u)
-            //std::cout << ", color=\"black\"";
-            //else
-            dot_file << ", color=\"grey\"";
-            dot_file << "]";
-        }
-    }
-    dot_file << "}";
-    return EXIT_SUCCESS;
-}
-*/
-
+#endif
