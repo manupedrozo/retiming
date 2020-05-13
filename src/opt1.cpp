@@ -14,6 +14,7 @@
 
 using namespace boost;
 
+//TODO@remove
 struct BellmanResult {
     bool r; //no negative cycle
     int *distance; //array of distances from root_vertex to each vertex
@@ -23,9 +24,10 @@ struct BellmanResult {
  * Bellman ALGORITHM
  * Internally builds a bgl graph from the provided vertices and edges.
  * Vertices weights are ignored.
- * Returns a BellmanResult.
+ * Result is stored into the distance array (distance from root_vertex to every other vertex).
+ * Returns true if no negative cycle was found.
  */
-BellmanResult bellman(Graph &graph, const int root_vertex) {
+bool bellman(Graph &graph, int *distance, const int root_vertex) {
     typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
     Edge *edges = graph.edges;
@@ -37,16 +39,17 @@ BellmanResult bellman(Graph &graph, const int root_vertex) {
         add_edge(edges[i].from, edges[i].to, edges[i].weight, g);
     }
 
-    int *distance = make_array(vertex_count, 0);//, std::numeric_limits<int>::max());
+    //int *distance = make_array(vertex_count, 0);//, std::numeric_limits<int>::max());
     distance[root_vertex] = 0;
 
     bool r = bellman_ford_shortest_paths(g, distance_map(distance).root_vertex(root_vertex));
 
-    return {r, distance};
+    return r;
 }
 
 struct OptResult {
     bool r; //retiming found
+    int c; //minimized clock period
     Graph graph; //retimed graph
 };
 
@@ -91,7 +94,9 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     }
 
     int c = -1; //best c
-    int *distance = nullptr;//distance array of best c
+    int *distance = (int *) malloc(sizeof(int) * vertex_count);;//distance array of best c
+    int *tmp_distance = (int *) malloc(sizeof(int) * vertex_count);//distance array of current c
+    int *aux_distance;//aux for swapping between distance and temp_distance
 
     //Binary search ordered c values
     int b, current_c;
@@ -143,27 +148,24 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
 
         //Run bellman
-        BellmanResult result = bellman(opt_graph, 0);//root_vertex); 
+        bool r = bellman(opt_graph, tmp_distance, 0);//root_vertex); 
 
         free(opt_edges);
 
-        if(result.r) { 
+        if(r) { 
             top = b - 1;
 
-            //free previous distance array
-            if(distance != nullptr)
-                free(distance);
-
-            //save c and distance array
+            //save c
             c = current_c;
-            distance = result.distance;
+
+            //switch distance array
+            aux_distance = distance;
+            distance = tmp_distance;
+            tmp_distance = aux_distance;
 #ifdef OPT1DEBUG
             std::cout << "Retiming found" << std::endl; 
 #endif
         } else {
-            //free useless distance array
-            free(result.distance);
-
             bot = b + 1;
 #ifdef OPT1DEBUG
             std::cout << "Negative cycle" << std::endl;
@@ -172,7 +174,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     }
 
     //If no retiming was found, return base graph as best retiming.
-    OptResult result = {false, graph};
+    OptResult result = {false, c, graph};
 
     if(c >= 0) {
         //a retiming c was found, make the retimed graph and return.
@@ -193,10 +195,11 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         }
 
         Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);
-        result = {true, retimed};
+        result = {true, c, retimed};
     } 
 
     free(c_candidates);
+    free(tmp_distance);
     free(distance);
 
     return result;
@@ -305,16 +308,14 @@ int test_correlator1() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    BellmanResult result = bellman(graph, root_vertex);
-    int *distance = result.distance;
+    int distance[vertex_count];
+    bool r = bellman(graph, distance, root_vertex);
 
-    if (result.r)
+    if (r)
         for (int i = 0; i < vertex_count; ++i)
             std::cout << i <<  ": " << std::setw(3) << distance[i] << " " << std::endl;
     else
         std::cout << "Negative cycle" << std::endl;
-
-    free(distance);
 
     return 0;
 }
@@ -349,16 +350,14 @@ int test_bgl_example() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    BellmanResult result = bellman(graph, root_vertex);
-    int* distance = result.distance;
+    int distance[vertex_count];
+    bool r = bellman(graph, distance, root_vertex);
 
-    if (result.r)
+    if (r)
         for (int i = 0; i < vertex_count; ++i)
             std::cout << i <<  ": " << std::setw(3) << distance[i] << " " << std::endl;
     else
         std::cout << "Negative cycle" << std::endl;
-
-    free(distance);
 
     return 0;
 }

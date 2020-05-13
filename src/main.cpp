@@ -1,13 +1,14 @@
 //#define OPT1DEBUG
-#define CPDEBUG
+//#define CPDEBUG
 
 #include "types.h"
 #include "graph_printer.cpp" 
 #include "wd.cpp" 
 #include "opt1.cpp" 
 #include "cp.cpp"
+#include "feas.cpp"
 
-int test_cp() {
+int test_feas() {
     const int vertex_count = 8;
     const int edge_count = 11;
 
@@ -38,9 +39,33 @@ int test_cp() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    int *deltas = cp(graph);
+    int c = 21;//best retiming
 
-    free(deltas);
+    int deltas[vertex_count];
+    FeasResult result = feas(graph, c, deltas);
+
+    Graph retimed = result.graph;
+
+    if(result.r) {
+        printf("--- RETIMED EDGES --- \n");
+        for (int i = 0; i < edge_count; ++i) {
+            printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
+        }
+        printf("--- r(Vi) --- \n");
+        for (int i = 0; i < vertex_count; ++i) {
+            printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
+        }
+
+    } else {
+        printf("--- No retiming found --- \n");
+    }
+
+    to_dot(retimed, "feas.dot");
+
+    free(retimed.vertices);
+    free(retimed.edges);
+
+    //free(deltas);
     return 0;
 }
 
@@ -106,8 +131,8 @@ int test_opt1() {
 }
 
 int main() {
-    printf("------------ TEST CP ------------\n");
-    test_cp();
+    printf("------------ TEST FEAS ------------\n");
+    test_feas();
 
     printf("\n\n------------ TEST OPT1 ------------\n");
     test_opt1();

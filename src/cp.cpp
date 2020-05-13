@@ -14,10 +14,11 @@
 
 /*
  * CP ALGORITHM
- * Computes clock period deltas for the given graph.
+ * Computes clock period deltas for the given graph into the deltas array.
+ * deltas array has to be of length = vertex_count
  * Returns an array of deltas in vertex order.
  */
-int *cp(Graph &graph) {
+int cp(Graph &graph, int *deltas) {
     Edge *edges = graph.edges;
     Vertex *vertices = graph.vertices;
     int vertex_count = graph.vertex_count;
@@ -36,7 +37,6 @@ int *cp(Graph &graph) {
 
     //Initialize deltas as vertices weights
     //We could do this in the while loop below but it would overcomplicate things
-    int *deltas = (int *) malloc(sizeof(int) * vertex_count);
     for (int i = 0; i < vertex_count; ++i) {
         deltas[i] = vertices[i].weight;
     }
@@ -59,7 +59,7 @@ int *cp(Graph &graph) {
             continue; //already calculated
         }
 
-#ifdef CPALG
+#ifdef CPDEBUG
         printf("%d:", id);
 #endif
 
@@ -104,11 +104,11 @@ int *cp(Graph &graph) {
             calculated[id] = true;
             --calccount;
 
-#ifdef CPALG
+#ifdef CPDEBUG
             printf("dependencies satisfied, delta = %d\n", deltas[id]);
 #endif
         } else {
-#ifdef CPALG
+#ifdef CPDEBUG
             printf("unsatisfied dendencies\n");
 #endif
         } 
@@ -117,11 +117,7 @@ int *cp(Graph &graph) {
         if(it == g0_vertices.end()) it = g0_vertices.begin();
     }
 
-    //Not returning c since we are interested in the deltas and not the global clock period.
-    //free (deltas);
-    //return c;     
-
-    return deltas;
+    return c;     
 }
 
 int main_cp1() {
@@ -155,9 +151,9 @@ int main_cp1() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    int *deltas = cp(graph);
+    int deltas[vertex_count];
+    int c = cp(graph, deltas);
 
-    free(deltas);
     return 0;
 }
 
@@ -191,9 +187,8 @@ int main_cp2() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    int *deltas = cp(graph);
-
-    free(deltas);
+    int deltas[vertex_count];
+    int c = cp(graph, deltas);
 
     return 0;
 }
