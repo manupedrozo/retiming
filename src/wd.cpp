@@ -75,22 +75,6 @@ WDEntry* wd_algorithm(Graph &graph) {
         add_edge(from, edges[i].to, WDEdgeWeight((edges[i].weight), -vertices[from].weight), g);
     }
 
-    //print graph to check its properly built
-    /*
-    std::cout << "VERTICES:" << std::endl; 
-    for(int i = 0; i < vertex_count; ++i) {
-        Vertex v = g[i];
-        std::cout << "Vertex " << i << " [weight: " << v.weight << "]"<< std::endl; 
-    }
-
-    std::cout << "EDGES:" << std::endl; 
-    graph_traits<BGLGraph>::edge_iterator ei, ei_end;
-    for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
-        std::cout << source(*ei, g) << " -> " << target(*ei, g)
-            << " [weight: " << get(edge_weight, g)[*ei].weight << "]" << std::endl;
-    */
-
-
     int maxweight = std::numeric_limits<int>::max();
     WDEdgeWeight max = WDEdgeWeight(maxweight, maxweight);
 
@@ -188,5 +172,20 @@ int main_wd() {
 
     return 0;
 }
+
+//print graph to check its properly built
+    /*
+    std::cout << "VERTICES:" << std::endl; 
+    for(int i = 0; i < vertex_count; ++i) {
+        Vertex v = g[i];
+        std::cout << "Vertex " << i << " [weight: " << v.weight << "]"<< std::endl; 
+    }
+
+    std::cout << "EDGES:" << std::endl; 
+    graph_traits<BGLGraph>::edge_iterator ei, ei_end;
+    for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
+        std::cout << source(*ei, g) << " -> " << target(*ei, g)
+            << " [weight: " << get(edge_weight, g)[*ei].weight << "]" << std::endl;
+    */
 
 #endif

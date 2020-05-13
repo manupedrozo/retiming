@@ -1,11 +1,50 @@
 //#define OPT1DEBUG
+#define CPDEBUG
 
 #include "types.h"
+#include "graph_printer.cpp" 
 #include "wd.cpp" 
 #include "opt1.cpp" 
-#include "graph_printer.cpp" 
+#include "cp.cpp"
 
-int main() {
+int test_cp() {
+    const int vertex_count = 8;
+    const int edge_count = 11;
+
+    Vertex vertices[] = {
+        Vertex(0),
+        Vertex(3),
+        Vertex(3),
+        Vertex(3),
+        Vertex(3),
+        Vertex(7),
+        Vertex(7),
+        Vertex(7),
+    };
+
+    Edge edges[] = { 
+        Edge(0, 1, 1),
+        Edge(1, 2, 1),
+        Edge(1, 7, 0),
+        Edge(2, 3, 1),
+        Edge(2, 6, 0),
+        Edge(3, 4, 1),
+        Edge(3, 5, 0),
+        Edge(4, 5, 0),
+        Edge(5, 6, 0),
+        Edge(6, 7, 0),
+        Edge(7, 0, 0),
+    };
+
+    Graph graph(vertices, edges, vertex_count, edge_count);
+
+    int *deltas = cp(graph);
+
+    free(deltas);
+    return 0;
+}
+
+int test_opt1() {
     //Correlator1
     const int vertex_count = 8;
     const int edge_count = 11;
@@ -64,4 +103,12 @@ int main() {
     free(WD);
 
     return 0;
+}
+
+int main() {
+    printf("------------ TEST CP ------------\n");
+    test_cp();
+
+    printf("\n\n------------ TEST OPT1 ------------\n");
+    test_opt1();
 }

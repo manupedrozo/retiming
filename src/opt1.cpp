@@ -101,7 +101,6 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         b = (top + bot)/2;
         current_c = c_candidates[b];
 
-        //TODO debug printing
 #ifdef OPT1DEBUG
         printf("b: %d\t c = %d\n", b, current_c);
         printf("bot: %d\ttop: %d\n", bot, top);
