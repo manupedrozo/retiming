@@ -1,6 +1,21 @@
+#ifndef GRAPHPRINTER
+#define GRAPHPRINTER
+
 #include <fstream>
 #include <string>
 #include "types.h"
+
+void print_graph(Graph &graph, std::string name) {
+    printf("------ Graph %s ------ \n", name.c_str());
+    printf("--- VERTEX --- \n");
+    for (int i = 0; i < graph.vertex_count; ++i) {
+        printf("r(V%d) = %d\n", i, graph.vertices[i].weight);
+    }
+    printf("--- EDGES --- \n");
+    for (int i = 0; i < graph.edge_count; ++i) {
+        printf("(%d, %d, [%d]) \n", graph.edges[i].from, graph.edges[i].to, graph.edges[i].weight);
+    }
+}
 
 void to_dot(Graph &graph, std::string path) {
 
@@ -26,3 +41,5 @@ void to_dot(Graph &graph, std::string path) {
 
     dot_file.close();
 }
+
+#endif

@@ -42,6 +42,8 @@ struct Graph {
         this->vertex_count = vertex_count;
         this->edge_count = edge_count;
     }
+
+    Graph() {}
 };
 
 //packs a WD pair
