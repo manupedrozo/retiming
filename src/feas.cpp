@@ -12,7 +12,7 @@ struct FeasResult {
     Graph graph; //retimed graph
 };
 
-//return bool
+//TODO doc
 FeasResult feas(Graph &graph, int target_c, int *deltas) {
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
@@ -28,7 +28,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     //compute and initialize retimed edges
     for (int j = 0; j < edge_count; ++j) {
         Edge edge = graph.edges[j];
-        retimed_edges[j] = { edge.from, edge.to, edge.weight + retiming[edge.to] - retiming[edge.from] };
+        retimed_edges[j] = { edge.from, edge.to, edge.weight };
     }
 
     bool changed = true;
