@@ -1,3 +1,6 @@
+#ifndef CYCLEFINDER
+#define CYCLEFINDER
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/hawick_circuits.hpp>
 
@@ -45,7 +48,9 @@ struct cycle_visitor
                 Edge edge = edges[j];
                 // Assuming there cannot be multiple edges between two vertices.
                 if(edge.from == u && edge.to == v) {
-                    if(edge.weight > 0) return;
+                    if(edge.weight > 0) {
+                        return;
+                    }
                     else {
                         //printf("Adding %d, %d [%d]\n", edge.from, edge.to, edge.weight);
                         cycle[i] = &edges[j];
@@ -107,17 +112,6 @@ int main_cycle() {
     std::vector<std::vector<Edge *>> cycles;
     find_zero_weight_cycles(&cycles, graph);
 
-    /*
-    typedef adjacency_list<vecS, vecS, directedS, no_property, no_property> BGLGraph;
-    BGLGraph g(vertex_count);
-    for(int i = 0; i < edge_count; ++i) {
-        add_edge(edges[i].from, edges[i].to, g);
-    }
-
-    cycle_visitor visitor(&cycles, edges, edge_count);
-    boost::hawick_circuits(g, visitor);
-    */
-
     printf("cycles: %d\n", (int) cycles.size());
     for(int i = 0; i < cycles.size(); ++i) {
         for(int j = 0; j < cycles[i].size(); ++j) {
@@ -130,3 +124,4 @@ int main_cycle() {
     return EXIT_SUCCESS;
 }
 
+#endif

@@ -13,11 +13,6 @@ struct Vertex {
     }
 };
 
-struct IVertex {
-    int id;
-    int weight;
-};
-
 struct Edge {
     int from;
     int to;

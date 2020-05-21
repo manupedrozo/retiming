@@ -35,10 +35,10 @@ int cp(Graph &graph, int *deltas) {
         }
     }
 
-    //Initialize deltas as vertices weights
+    //Initialize deltas as 0
     //We could do this in the while loop below but it would overcomplicate things
     for (int i = 0; i < vertex_count; ++i) {
-        deltas[i] = vertices[i].weight;
+        deltas[i] = 0;
     }
 
     int c = 0; //clock period (max delta)
@@ -96,7 +96,7 @@ int cp(Graph &graph, int *deltas) {
             } 
 
             //calculate delta 
-            deltas[id] += max_delta;
+            deltas[id] = vertices[id].weight + max_delta;
 
             if(deltas[id] > c) c = deltas[id]; //set clock period to current delta if greater
             

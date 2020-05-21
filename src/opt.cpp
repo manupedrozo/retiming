@@ -103,19 +103,22 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     //Binary search ordered c values
     int b, current_c;
     int bot = 0;
-    int top = c_count;
-    while(bot < top) {
+    int top = c_count-1;
+    bool loop = true;
+    while(loop) {
+        if(top <= bot) loop = false;
         b = (top + bot)/2;
         current_c = c_candidates[b];
 
 #ifdef OPT1DEBUG
-        printf("[Binary search] b: %d\tbot: %d\ttop: %d\tc = %d\n", b, current_c, bot, top);
+        printf("[Binary search] b: %d\tbot: %d\ttop: %d\tcc = %d\n", b, bot, top, current_c);
 #endif
 
         //Get edges for 7.2
         std::list<Edge> opt_edges2;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
+                if (u == v) continue;
                 entry = WD[u * vertex_count + v];
                 //check the requirements on D(u,v)
                 if(entry.D > current_c && (entry.D - vertices[u].weight <= current_c) && (entry.D - vertices[v].weight <= current_c)) {
@@ -248,13 +251,15 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
     //Binary search ordered c values
     int b, current_c;
     int bot = 0;
-    int top = c_count;
-    while(bot < top) {
+    int top = c_count-1;
+    bool loop = true;
+    while(loop) {
+        if(top <= bot) loop = false;
         b = (top + bot)/2;
         current_c = c_candidates[b];
 
 #ifdef OPT2DEBUG
-        printf("[Binary search] b: %d\tbot: %d\ttop: %d\tc = %d\n", b, current_c, bot, top);
+        printf("[Binary search] b: %d\tbot: %d\ttop: %d\tcc = %d\n", b, bot, top, current_c);
 #endif
 
         //Run feas
