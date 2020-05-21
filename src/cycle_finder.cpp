@@ -43,20 +43,21 @@ struct cycle_visitor
         for(int i = 0; i < cycle_length; ++i) {
             v = get(indices, p[i]);
 
+            // Check if there is at least one 0 weight edge between the vertices
             // This is not optimized at all 
+            bool zero_edge = false;
             for(int j = 0; j < edge_count; ++j) {
                 Edge edge = edges[j];
-                // Assuming there cannot be multiple edges between two vertices.
+
                 if(edge.from == u && edge.to == v) {
-                    if(edge.weight > 0) {
-                        return;
+                    if(edge.weight == 0) {
+                        zero_edge = true;
                     }
-                    else {
-                        //printf("Adding %d, %d [%d]\n", edge.from, edge.to, edge.weight);
-                        cycle[i] = &edges[j];
-                    }
+                    //printf("Adding %d, %d [%d]\n", edge.from, edge.to, edge.weight);
+                    cycle[i] = &edges[j];
                 }
             }
+            if(!zero_edge) return;
 
             u = v;
         }

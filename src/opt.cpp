@@ -30,7 +30,7 @@ struct BellmanResult {
  * Returns true if no negative cycle was found.
  */
 bool bellman(Graph &graph, int *distance, const int root_vertex) {
-    typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
+    typedef adjacency_list <vecS, vecS, undirectedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
     Edge *edges = graph.edges;
     int vertex_count = graph.vertex_count;
@@ -118,7 +118,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         std::list<Edge> opt_edges2;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
-                if (u == v) continue;
+                //if(u == v) continue;
                 entry = WD[u * vertex_count + v];
                 //check the requirements on D(u,v)
                 if(entry.D > current_c && (entry.D - vertices[u].weight <= current_c) && (entry.D - vertices[v].weight <= current_c)) {
@@ -127,6 +127,13 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
                 }
             }
         }
+
+        /*
+        if(opt_edges2.size() == 0) {
+            bot = b + 1;
+            continue; 
+        }
+        */
 
         //Merge edges into a single array
         int opt_edge_count = edge_count + opt_edges2.size();

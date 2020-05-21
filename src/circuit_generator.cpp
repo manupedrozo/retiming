@@ -1,7 +1,11 @@
 #ifndef CIRCUITGEN
 #define CIRCUITGEN
 
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <boost/graph/johnson_all_pairs_shortest.hpp>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <random>
 #include <math.h>
@@ -10,7 +14,7 @@
 #include "types.h"
 #include "graph_printer.cpp" 
 
-//#define CIRCUITGENDEBUG
+#define CIRCUITGENDEBUG
 
 struct RandomCalculator {
     std::random_device rd;
@@ -45,7 +49,7 @@ struct RandomCalculator {
 
 Graph generate_circuit(int vertex_count) {
 
-    double edge_p = 0.2; // Probability of edge between two vertices
+    double edge_p = 0.4; // Probability of edge between two vertices
 
     RandomCalculator rand;
 
@@ -53,23 +57,148 @@ Graph generate_circuit(int vertex_count) {
 
     Vertex *vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
 
-    int prev = vertex_count-1;
+    //int prev = vertex_count-1;
     for (int i = 0; i < vertex_count; ++i) {
         vertices[i] = Vertex(rand.vertex_weight());
-        edges_v.push_back(Edge(prev, i, rand.edge_weight())); // Connect outer circuit
+        //edges_v.push_back(Edge(prev, i, rand.edge_weight())); // Connect outer circuit
 
+        //if(i > 0) {
         // Random edges from current vertex to higher-index vertices
-        for (int j = i+2; j < vertex_count; ++j) {
-            if(rand.edge() < edge_p) {
+        double multiplier = 1;
+        for (int j = i+1; j < vertex_count; ++j) {
+            if(rand.edge() < edge_p * multiplier) {
                 edges_v.push_back(Edge(i, j, rand.edge_weight()));
+                --j; multiplier /= 3;// Reroll same edge, with 1/3 the chance
+            } else {
+                multiplier = 1;
             }
         }
-        // Edge to first vertex
-        //if(i > 0 && i < vertex_count-1 && rand.edge() < edge_p) {
-        //    edges_v.push_back(Edge(i, 0, rand.edge_weight()));
         //}
 
-        prev = i;
+        // Edge to first vertex
+        if(i > 0) {
+            bool f = true;
+            while(f) {
+                if(rand.edge() < edge_p * multiplier) {
+                    edges_v.push_back(Edge(i, 0, rand.edge_weight()));
+                    multiplier /= 3; f = true;
+                } else { 
+                    f = false;
+                }
+            }
+        }
+
+        //prev = i;
+    }
+
+    // Check for unconnected graphs (components)
+    int components;
+    std::vector<int> component(vertex_count);
+    {
+        using namespace boost;
+        typedef adjacency_list <vecS, vecS, undirectedS> BGLGraph;
+
+        BGLGraph g(vertex_count);
+
+        for(int i = 0; i < edges_v.size(); ++i) {
+            int from = edges_v[i].from;
+            add_edge(from, edges_v[i].to, g);
+        }
+
+        components = connected_components(g, &component[0]);
+
+#ifdef CIRCUITGENDEBUG
+        std::vector<int>::size_type i;
+        std::cout << "Total number of components: " << components << std::endl;
+        for (i = 0; i != component.size(); ++i)
+            std::cout << "Vertex " << i <<" is in component " << component[i] << std::endl;
+        std::cout << std::endl; 
+#endif
+    }
+
+    // Calculate root by doing a shortest all path and checking from which node I can get to the most nodes.
+    {
+        typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
+
+        BGLGraph g(vertex_count);
+
+        for(int i = 0; i < edges_v.size(); ++i) {
+            int from = edges_v[i].from;
+            add_edge(from, edges_v[i].to, edges_v[i].weight, g);
+        }
+        int maxweight = std::numeric_limits<int>::max();
+        std::vector<std::vector<int>> D(vertex_count, std::vector<int>(vertex_count));
+
+        johnson_all_pairs_shortest_paths(g, D, distance_inf(maxweight).distance_zero(0));
+
+#ifdef CIRCUITGENDEBUG
+        printf("All pairs shortest paths:\n");
+        std::cout << "     ";
+        for (int k = 0; k < vertex_count; ++k)
+            std::cout << std::setw(5) << k;
+        std::cout << "\n" << std::endl;
+        for (int i = 0; i < vertex_count; ++i) {
+            std::cout << i << " -> ";
+            for (int j = 0; j < vertex_count; ++j) {
+                int d = D[i][j];
+                if (d == maxweight)
+                    std::cout << std::setw(5) << "inf";
+                else
+                    std::cout << std::setw(5) << D[i][j];
+            }
+            std::cout << std::endl;
+        }
+#endif
+        // Get root
+        int root = 0;
+        int reach = 0;
+        int c_reach = 0;
+        for (int i = 0; i < vertex_count; ++i) {
+
+            // TODO we probably want to set the weight of vertices that dont have incoming edges to 0, but maybe do this after connecting the components.
+
+            for (int j = 0; j < vertex_count; ++j) {
+                int d = D[i][j];
+                if(d < maxweight) {
+                    ++c_reach;
+                }
+            }
+            if(c_reach == vertex_count) {
+                root = i;
+                break;
+            } else if (c_reach > reach) {
+                root = i;
+                reach = c_reach;
+            }
+            c_reach = 0;
+        }
+
+        // Set root weight to 0
+        vertices[root].weight = 0;
+
+#ifdef CIRCUITGENDEBUG
+        printf("Selected root: %d\n", root);
+#endif
+        
+        // Connect the components if there are multiple.
+        if (components > 1) {
+            std::vector<std::vector<int>> component_vertices(components, std::vector<int>());
+            for (int i = 0; i < component.size(); ++i) {
+                component_vertices[component[i]].push_back(i);
+            }
+
+            int root_component = component[root];
+            // Edge from the root_component to a node in another component
+            for (int i = 0; i < components; ++i) {
+                if(i == root_component) continue;
+                int from = rand.uniform(0, component_vertices[root_component].size()-1);
+                int to = rand.uniform(0, component_vertices[i].size()-1);
+                edges_v.push_back(Edge(component_vertices[root_component][from], component_vertices[i][to], rand.edge_weight()));
+#ifdef CIRCUITGENDEBUG
+                printf("Adding edge %d -> %d\n", component_vertices[root_component][from], component_vertices[i][to]);
+#endif
+            }
+        }
     }
 
     int edge_count = edges_v.size();
@@ -118,12 +247,15 @@ Graph generate_circuit(int vertex_count) {
     return graph;
 }
 
-int main_gen() {
+
+int main() {
     Graph graph = generate_circuit(5);
     to_dot(graph, "random_circuit.dot");
 
     free(graph.vertices);
-    free(graph.edges);
+    free(graph.edges); 
+
+    return 0;
 }
 
 #endif

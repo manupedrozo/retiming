@@ -32,7 +32,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     }
 
     bool changed = true;
-    int retime_count = 0;
+    //int retime_count = 0;
 
     //repeat |V|-1 times
     int i;
@@ -49,7 +49,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
                 ++retiming[v]; 
             }
         }
-        if(changed) ++retime_count;
+        //if(changed) ++retime_count;
 
         //Update retimed edges
         for (int j = 0; j < edge_count; ++j) {
@@ -64,7 +64,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     //Calculate retimed vertices
     Vertex *retimed_vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
     for (int i = 0; i < vertex_count; ++i) {
-        retimed_vertices[i] = Vertex(retiming[i] - retime_count);
+        retimed_vertices[i] = Vertex(retiming[i]);// - retime_count);
     }
 
     //Build retimed graph
