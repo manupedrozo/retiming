@@ -30,7 +30,7 @@ struct BellmanResult {
  * Returns true if no negative cycle was found.
  */
 bool bellman(Graph &graph, int *distance, const int root_vertex) {
-    typedef adjacency_list <vecS, vecS, undirectedS, no_property, property<edge_weight_t, int>> BGLGraph;
+    typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
     Edge *edges = graph.edges;
     int vertex_count = graph.vertex_count;
