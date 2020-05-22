@@ -1,8 +1,10 @@
-#define OPT1DEBUG
+//#define OPT1DEBUG
 //#define OPT2DEBUG
-#define CIRCUITGENDEBUG
+//#define CIRCUITGENDEBUG
+//#define CYCLEFINDERDEBUG
 //#define FEASDEBUG
 //#define CPDEBUG
+#define DEBUGRETCHECKER
 
 #include "types.h"
 #include "graph_printer.cpp" 
@@ -11,6 +13,50 @@
 #include "opt.cpp" 
 #include "cp.cpp"
 #include "feas.cpp"
+#include "retiming_checker.cpp"
+
+#include <iostream>
+#include <iomanip>
+
+void print_wd(WDEntry *WD, int vertex_count) {
+    std::cout << "---- W ----" << std::endl;
+    std::cout << "     ";
+    for (int k = 0; k < vertex_count; ++k)
+        std::cout << std::setw(5) << k;
+    std::cout << "\n" << std::endl;
+    for (int i = 0; i < vertex_count; ++i) {
+        std::cout << i << " -> ";
+        for (int j = 0; j < vertex_count; ++j) {
+            int w = WD[i * vertex_count + j].W;
+            if (w > MAXINT>>1)
+                std::cout << std::setw(5) << "inf";
+            else if (w < 0)
+                std::cout << std::setw(5) << "-inf";
+            else
+                std::cout << std::setw(5) << w;
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "---- D ----" << std::endl;
+    std::cout << "     ";
+    for (int k = 0; k < vertex_count; ++k)
+        std::cout << std::setw(5) << k;
+    std::cout << "\n" << std::endl;
+    for (int i = 0; i < vertex_count; ++i) { 
+        std::cout << i << " -> ";
+        for (int j = 0; j < vertex_count; ++j) {
+            int d = WD[i * vertex_count + j].D;
+            if (d > MAXINT>>1)
+                std::cout << std::setw(5) << "inf";
+            else if (d < 0)
+                std::cout << std::setw(5) << "-inf";
+            else
+                std::cout << std::setw(5) << d;       
+        }
+        std::cout << std::endl;
+    }
+}
 
 int test_feas() {
     const int vertex_count = 8;
@@ -171,31 +217,7 @@ int test_opt1_2() {
 
     WDEntry* WD = wd_algorithm(graph);
 
-    std::cout << "---- W ----" << std::endl;
-    std::cout << "     ";
-    for (int k = 0; k < vertex_count; ++k)
-        std::cout << std::setw(5) << k;
-    std::cout << "\n" << std::endl;
-    for (int i = 0; i < vertex_count; ++i) {
-        std::cout << i << " -> ";
-        for (int j = 0; j < vertex_count; ++j) {
-            std::cout << std::setw(5) << WD[i * vertex_count + j].W;
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << "---- D ----" << std::endl;
-    std::cout << "     ";
-    for (int k = 0; k < vertex_count; ++k)
-        std::cout << std::setw(5) << k;
-    std::cout << "\n" << std::endl;
-    for (int i = 0; i < vertex_count; ++i) { 
-        std::cout << i << " -> ";
-        for (int j = 0; j < vertex_count; ++j) {
-            std::cout << std::setw(5) << WD[i * vertex_count + j].D;
-        }
-        std::cout << std::endl;
-    }
+    print_wd(WD, vertex_count);
 
     std::cout << "------ OPT1 ------" << std::endl;
     OptResult result = opt1(graph, WD);
@@ -315,7 +337,7 @@ int test_opt2() {
 
 int test_random() {
     // Random circuit
-    Graph graph = generate_circuit(5);
+    Graph graph = generate_circuit(10);
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
 
@@ -327,34 +349,8 @@ int test_random() {
     free(deltas);
 
     WDEntry* WD = wd_algorithm(graph);
-
-    
-    std::cout << "---- W ----" << std::endl;
-    std::cout << "     ";
-    for (int k = 0; k < vertex_count; ++k)
-        std::cout << std::setw(5) << k;
-    std::cout << "\n" << std::endl;
-    for (int i = 0; i < vertex_count; ++i) {
-        std::cout << i << " -> ";
-        for (int j = 0; j < vertex_count; ++j) {
-            std::cout << std::setw(5) << WD[i * vertex_count + j].W;
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << "---- D ----" << std::endl;
-    std::cout << "     ";
-    for (int k = 0; k < vertex_count; ++k)
-        std::cout << std::setw(5) << k;
-    std::cout << "\n" << std::endl;
-    for (int i = 0; i < vertex_count; ++i) { 
-        std::cout << i << " -> ";
-        for (int j = 0; j < vertex_count; ++j) {
-            std::cout << std::setw(5) << WD[i * vertex_count + j].D;
-        }
-        std::cout << std::endl;
-    }
-    
+ 
+    print_wd(WD, vertex_count);
 
     std::cout << "------ OPT1 ------" << std::endl;
     OptResult result = opt1(graph, WD);
@@ -372,6 +368,11 @@ int test_random() {
         }
 
         to_dot(retimed, "random_circuit_retimed.dot");
+
+        if(check_legal(graph, retimed, result.c, WD))
+            printf("- LEGAL RETIMING - \n");
+        else 
+            printf("- ILLEGAL RETIMING!!! - \n");
 
         free(retimed.vertices);
         free(retimed.edges);
@@ -396,6 +397,11 @@ int test_random() {
 
         to_dot(retimed, "random_circuit_retimed2.dot");
 
+        if(check_legal(graph, retimed, result.c, WD))
+            printf("- LEGAL RETIMING - \n");
+        else 
+            printf("- ILLEGAL RETIMING!!! - \n");
+
         free(retimed.vertices);
         free(retimed.edges);
     } else {
@@ -411,6 +417,49 @@ int test_random() {
     return 0;
 }
 
+void test_n_random(int n, int vertex_count) {
+    for(int i = 0; i < n; ++i) {
+        printf("- CIRCUIT %d -\n", i);
+        Graph graph = generate_circuit(vertex_count);
+        int edge_count = graph.edge_count;
+
+        int *deltas = (int *) malloc(sizeof(int) * vertex_count);
+        int c = cp(graph, deltas);
+        printf("initial C = %d\n", c);
+        free(deltas);
+
+        WDEntry* WD = wd_algorithm(graph);
+
+        OptResult result1 = opt1(graph, WD);
+        OptResult result2 = opt2(graph, WD);
+
+        if(result1.r && result1.c < c) {
+            printf("OPT1: Retiming found - C: %d\tLegal: %d\n", result1.c, check_legal(graph, result1.graph, result1.c, WD));
+        } else {
+            printf("OPT1: No retiming found\n");
+        }
+        if(result2.r && result2.c < c) {
+            printf("OPT2: Retiming found - C: %d\tLegal: %d\n", result2.c, check_legal(graph, result2.graph, result2.c, WD));
+        } else {
+            printf("OPT2: No retiming found\n");
+        }
+
+        if(result1.r) {
+            free(result1.graph.vertices);
+            free(result1.graph.edges);
+        }
+        if(result2.r) {
+            free(result2.graph.vertices);
+            free(result2.graph.edges);
+        }
+
+        free(graph.vertices);
+        free(graph.edges);
+        free(WD);
+
+    }
+}
+
 int main() {
     //printf("------------ TEST FEAS ------------\n");
     //test_feas();
@@ -424,8 +473,10 @@ int main() {
     test_opt1();
 
     test_opt1_2();
-    */
+
     printf("\n\n------------ TEST RANDOM ------------\n");
+    */
+    test_n_random(10, 10);
     test_random();
 }
 

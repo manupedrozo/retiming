@@ -3,13 +3,14 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/hawick_circuits.hpp>
-
 #include <vector>
-#include <iostream>
-
 #include "types.h"
 
-using namespace boost;
+//#define CYCLEFINDERDEBUG
+#ifdef CYCLEFINDERDEBUG
+#include <iostream>
+#endif
+
 
 struct cycle_visitor
 {
@@ -25,6 +26,7 @@ struct cycle_visitor
 
     template <typename Path, typename Graph>
     void cycle(Path const& p, Graph const& g) {
+        using namespace boost;
         if (p.empty())
             return;
 
@@ -52,9 +54,11 @@ struct cycle_visitor
                 if(edge.from == u && edge.to == v) {
                     if(edge.weight == 0) {
                         zero_edge = true;
+                        cycle[i] = &edges[j];
+#ifdef CYCLEFINDERDEBUG
+                        printf("Adding %d, %d [%d]\n", edge.from, edge.to, edge.weight);
+#endif
                     }
-                    //printf("Adding %d, %d [%d]\n", edge.from, edge.to, edge.weight);
-                    cycle[i] = &edges[j];
                 }
             }
             if(!zero_edge) return;
@@ -64,11 +68,14 @@ struct cycle_visitor
 
         // 0 weighted cycle
         cycles->push_back(cycle);
-        //printf("Added cycle: %d\n", cycle_length);
+#ifdef CYCLEFINDERDEBUG
+        printf("Added cycle: %d\n", cycles->size());
+#endif
     }
 };
 
 void find_zero_weight_cycles(std::vector<std::vector<Edge *>> *cycles, Graph &graph) {
+    using namespace boost;
     typedef adjacency_list<vecS, vecS, directedS, no_property, no_property> BGLGraph;
     BGLGraph g(graph.vertex_count);
     for(int i = 0; i < graph.edge_count; ++i) {
@@ -79,33 +86,24 @@ void find_zero_weight_cycles(std::vector<std::vector<Edge *>> *cycles, Graph &gr
     boost::hawick_circuits(g, visitor);
 }
 
+#ifdef CYCLEFINDERDEBUG
 int main_cycle() {
-    const int vertex_count = 8;
-    const int edge_count = 11;
+    const int vertex_count = 3;
+    const int edge_count = 6;
 
     Vertex vertices[] = {
         Vertex(0),
         Vertex(3),
         Vertex(3),
-        Vertex(3),
-        Vertex(3),
-        Vertex(7),
-        Vertex(7),
-        Vertex(7),
     };
 
     Edge edges[] = { 
         Edge(0, 1, 0),
+        Edge(0, 1, 0),
+        Edge(1, 0, 0),
+        Edge(1, 0, 0),
         Edge(1, 2, 0),
-        Edge(1, 7, 0),
-        Edge(2, 3, 0),
-        Edge(2, 6, 1),
-        Edge(3, 4, 0),
-        Edge(3, 5, 0),
-        Edge(4, 5, 0),
-        Edge(5, 6, 0),
-        Edge(6, 7, 0),
-        Edge(7, 0, 0),
+        Edge(2, 0, 0),
     };
 
     Graph graph(vertices, edges, vertex_count, edge_count);
@@ -122,7 +120,8 @@ int main_cycle() {
         std::cout << "\n";
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }
+#endif
 
 #endif

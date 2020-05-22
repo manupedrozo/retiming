@@ -6,13 +6,23 @@
 
 //#define FEASDEBUG
 
+#ifdef FEASDEBUG
+#include <iostream>
+#endif
+
 struct FeasResult {
     bool r; //retiming found
     int c; //minimized clock period
     Graph graph; //retimed graph
 };
 
-//TODO doc
+/**
+ * FEAS ALGORITHM
+ * Calculates a retiming of the circuit with clock period <= target_c
+ * Uses CP algorithm
+ * deltas: int array of vertex_count size to calculate CP algorithm
+ * Returns a FeasResult
+ */
 FeasResult feas(Graph &graph, int target_c, int *deltas) {
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
@@ -73,6 +83,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     return { c <= target_c, c, retimed };
 }
 
+#ifdef FEASDEBUG
 int main_feas() {
     const int vertex_count = 8;
     const int edge_count = 11;
@@ -130,5 +141,6 @@ int main_feas() {
 
     return 0;
 }
+#endif
 
 #endif

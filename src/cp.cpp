@@ -1,14 +1,17 @@
 #ifndef CPALG
 #define CPALG
 
-#include "types.h"
-#include "stdlib.h"
+#include <stdlib.h>
 #include <list>
-#include "iostream"
 #include <algorithm>
 #include <vector>
 #include <set>
 #include <queue>
+#include "types.h"
+
+#ifdef CPDEBUG
+#include <iostream>
+#endif
 
 //#define CPDEBUG
 
@@ -79,13 +82,15 @@ int cp(Graph &graph, int *deltas) {
                 dependencies.insert(edge->from);
             }
         }
-        //print dependencies
+
         /*
+#ifdef CPDEBUG
         printf("%d dependencies: \t", *it);
         for (int i = 0; i < deps; ++i) {
             printf("%d, ", dependencies[i]);
         }
         printf("\n");
+#endif
          */
 
         if(satisfied) {

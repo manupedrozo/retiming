@@ -1,7 +1,7 @@
 #ifndef TYPES
 #define TYPES
 
-#include "stdlib.h"
+#include <stdlib.h>
 #include <limits>
 
 const int MAXINT = std::numeric_limits<int>::max();

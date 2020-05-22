@@ -3,13 +3,15 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
-#include <iomanip>
-#include <iostream>
 #include <vector>
-
 #include "types.h"
 
-using namespace boost;
+//define WDDEBUG
+
+#ifdef WDDEBUG
+#include <iomanip>
+#include <iostream>
+#endif
 
 // Edge weight for the WD algorithm which is the pair (w(e), -d(u))
 struct WDEdgeWeight { 
@@ -46,11 +48,14 @@ struct WDEdgeWeight {
 
 /**
  * WD ALGORITHM
- * Internally builds a bgl graph from the provided vertices and edges.
+ * Internally builds a bgl graph from the provided Graph.
  * The edges built into the graph are weighted according to the WD algorithm requirements.
  * Returns a WDEntry matrix.
  */
 WDEntry* wd_algorithm(Graph &graph) {
+
+    using namespace boost;
+
     //typedef the graph
     typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> BGLGraph;
 
@@ -62,13 +67,6 @@ WDEntry* wd_algorithm(Graph &graph) {
     //create graph
     BGLGraph g(vertex_count);
 
-    //add properties to vertices
-    /*
-    for(int i = 0; i < vertex_count; ++i) {
-        g[i].weight = vertices[i].weight;
-    }
-    */
-
     //add edges
     for(int i = 0; i < edge_count; ++i) {
         int from = edges[i].from;
@@ -77,11 +75,6 @@ WDEntry* wd_algorithm(Graph &graph) {
 
     int maxweight = std::numeric_limits<int>::max();
     WDEdgeWeight max = WDEdgeWeight(maxweight, maxweight);
-
-    /* TODO@remove unnecessary
-    std::vector<WDEdgeWeight >d(vertex_count, (WDEdgeWeight(maxweight, maxweight)));
-    distance_map(&d[0]).distance_inf....
-    */
 
     //distance matrix, initialized with max value
     std::vector<std::vector<WDEdgeWeight>> D(vertex_count, std::vector<WDEdgeWeight>(vertex_count));
@@ -106,6 +99,7 @@ WDEntry* wd_algorithm(Graph &graph) {
 }
 
 
+#ifdef WDDEBUG
 int main_wd() {
 
     //Correlator1
@@ -172,20 +166,6 @@ int main_wd() {
 
     return 0;
 }
-
-//print graph to check its properly built
-    /*
-    std::cout << "VERTICES:" << std::endl; 
-    for(int i = 0; i < vertex_count; ++i) {
-        Vertex v = g[i];
-        std::cout << "Vertex " << i << " [weight: " << v.weight << "]"<< std::endl; 
-    }
-
-    std::cout << "EDGES:" << std::endl; 
-    graph_traits<BGLGraph>::edge_iterator ei, ei_end;
-    for (tie(ei, ei_end) = boost::edges(g); ei != ei_end; ++ei)
-        std::cout << source(*ei, g) << " -> " << target(*ei, g)
-            << " [weight: " << get(edge_weight, g)[*ei].weight << "]" << std::endl;
-    */
+#endif
 
 #endif

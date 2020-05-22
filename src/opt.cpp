@@ -3,8 +3,6 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
-#include <iomanip>
-#include <iostream>
 #include <set>
 
 #include "types.h"
@@ -13,14 +11,12 @@
 #include "graph_printer.cpp" 
 
 //#define OPT1DEBUG
+//#define OPT2DEBUG
 
-using namespace boost;
-
-//TODO@remove
-struct BellmanResult {
-    bool r; //no negative cycle
-    int *distance; //array of distances to each vertex
-};
+#if defined(OPT1DEBUG) || defined(OPT2DEBUG) 
+#include <iomanip>
+#include <iostream>
+#endif
 
 /**
  * Bellman ALGORITHM
@@ -30,6 +26,7 @@ struct BellmanResult {
  * Returns true if no negative cycle was found.
  */
 bool bellman(Graph &graph, int *distance) {
+    using namespace boost;
     typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
     Edge *edges = graph.edges;
@@ -46,7 +43,6 @@ bool bellman(Graph &graph, int *distance) {
         add_edge(vertex_count, i, 0, g);
     }
 
-    //int *distance = make_array(vertex_count, 0);//, std::numeric_limits<int>::max());
     distance[vertex_count] = 0;
 
     bool r = bellman_ford_shortest_paths(g, distance_map(distance).root_vertex(vertex_count));
@@ -66,7 +62,6 @@ struct OptResult {
  * Returns an OptResult.
  */
 OptResult opt1(Graph &graph, WDEntry *WD) {
-
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
     Edge *edges = graph.edges;
@@ -135,16 +130,9 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
             }
         }
 
-        /*
-        if(opt_edges2.size() == 0) {
-            bot = b + 1;
-            continue; 
-        }
-        */
-
         //Merge edges into a single array
         int opt_edge_count = edge_count + opt_edges2.size();
-        //probably wanna resize the same opt_edges instead of fully allocating each pass
+        //TODO: May want to resize the same opt_edges instead of fully allocating each pass
         Edge *opt_edges = (Edge *) malloc(sizeof(Edge) * opt_edge_count);
         int k;
         for (k = 0; k < edge_count; ++k) {
@@ -229,7 +217,6 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
  * Returns an OptResult.
  */
 OptResult opt2(Graph &graph, WDEntry *WD) {
-
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
     Edge *edges = graph.edges;
@@ -317,6 +304,7 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
     else return {false, c, graph};;
 }
 
+#if defined(OPT1DEBUG) || defined(OPT2DEBUG) 
 int main_opt1() {
     //Correlator1
     const int vertex_count = 8;
@@ -470,5 +458,6 @@ int test_bgl_example() {
 
     return 0;
 }
+#endif
 
 #endif
