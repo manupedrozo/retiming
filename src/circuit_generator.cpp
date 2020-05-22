@@ -116,7 +116,8 @@ Graph generate_circuit(int vertex_count) {
 #endif
     }
 
-    // Calculate root by doing a shortest all path and checking from which node I can get to the most nodes.
+    // Calculate root by doing a shortest nall path and checking from which node I can get to the most nodes.
+    int root = 0;
     {
         typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
@@ -126,7 +127,7 @@ Graph generate_circuit(int vertex_count) {
             int from = edges_v[i].from;
             add_edge(from, edges_v[i].to, edges_v[i].weight, g);
         }
-        int maxweight = std::numeric_limits<int>::max();
+        int maxweight = MAXINT;
         std::vector<std::vector<int>> D(vertex_count, std::vector<int>(vertex_count));
 
         johnson_all_pairs_shortest_paths(g, D, distance_inf(maxweight).distance_zero(0));
@@ -150,7 +151,6 @@ Graph generate_circuit(int vertex_count) {
         }
 #endif
         // Get root
-        int root = 0;
         int reach = 0;
         int c_reach = 0;
         for (int i = 0; i < vertex_count; ++i) {
@@ -248,7 +248,7 @@ Graph generate_circuit(int vertex_count) {
 }
 
 
-int main() {
+int main_gen() {
     Graph graph = generate_circuit(5);
     to_dot(graph, "random_circuit.dot");
 

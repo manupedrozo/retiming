@@ -19,17 +19,17 @@ using namespace boost;
 //TODO@remove
 struct BellmanResult {
     bool r; //no negative cycle
-    int *distance; //array of distances from root_vertex to each vertex
+    int *distance; //array of distances to each vertex
 };
 
 /**
  * Bellman ALGORITHM
  * Internally builds a bgl graph from the provided vertices and edges.
  * Vertices weights are ignored.
- * Result is stored into the distance array (distance from root_vertex to every other vertex).
+ * Result is stored into the distance array.
  * Returns true if no negative cycle was found.
  */
-bool bellman(Graph &graph, int *distance, const int root_vertex) {
+bool bellman(Graph &graph, int *distance) {
     typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
     Edge *edges = graph.edges;
@@ -41,10 +41,15 @@ bool bellman(Graph &graph, int *distance, const int root_vertex) {
         add_edge(edges[i].from, edges[i].to, edges[i].weight, g);
     }
 
-    //int *distance = make_array(vertex_count, 0);//, std::numeric_limits<int>::max());
-    distance[root_vertex] = 0;
+    // Add a new vertex (root) with an edge to each other vertex to guarantee reachability
+    for(int i = 0; i < vertex_count; ++i) {
+        add_edge(vertex_count, i, 0, g);
+    }
 
-    bool r = bellman_ford_shortest_paths(g, distance_map(distance).root_vertex(root_vertex));
+    //int *distance = make_array(vertex_count, 0);//, std::numeric_limits<int>::max());
+    distance[vertex_count] = 0;
+
+    bool r = bellman_ford_shortest_paths(g, distance_map(distance).root_vertex(vertex_count));
 
     return r;
 }
@@ -77,7 +82,9 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
                 entry = WD[u * vertex_count + v];
-                c_candidates_set.insert(entry.D);
+                if(entry.D > 0 && entry.D < MAXINT) {
+                    c_candidates_set.insert(entry.D);
+                }
             }
         }
         c_count = c_candidates_set.size();
@@ -96,8 +103,8 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     }
 
     int c = -1; //best c
-    int *distance = (int *) malloc(sizeof(int) * vertex_count);;//distance array of best c
-    int *tmp_distance = (int *) malloc(sizeof(int) * vertex_count);//distance array of current c
+    int *distance = (int *) malloc(sizeof(int) * (vertex_count + 1));;//distance array of best c
+    int *tmp_distance = (int *) malloc(sizeof(int) * (vertex_count + 1));//distance array of current c
     int *aux_distance;//aux for swapping between distance and temp_distance
 
     //Binary search ordered c values
@@ -159,7 +166,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
 
         //Run bellman
-        bool r = bellman(opt_graph, tmp_distance, 0);//root_vertex); 
+        bool r = bellman(opt_graph, tmp_distance); 
 
         free(opt_edges);
 
@@ -240,7 +247,9 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
                 entry = WD[u * vertex_count + v];
-                c_candidates_set.insert(entry.D);
+                if(entry.D > 0 && entry.D < MAXINT) {
+                    c_candidates_set.insert(entry.D);
+                }
             }
         }
         c_count = c_candidates_set.size();
@@ -312,7 +321,6 @@ int main_opt1() {
     //Correlator1
     const int vertex_count = 8;
     const int edge_count = 11;
-    const int root_vertex = 0;
 
     Vertex vertices[] = {
         Vertex(0),
@@ -371,7 +379,6 @@ int test_correlator1() {
     //correlator1
     const int vertex_count = 8;
     const int edge_count = 16;
-    const int root_vertex = 0;
 
     //Vertex weights don't matter for bellman
     Vertex vertices[] = {
@@ -411,8 +418,8 @@ int test_correlator1() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    int distance[vertex_count];
-    bool r = bellman(graph, distance, root_vertex);
+    int distance[vertex_count+1];
+    bool r = bellman(graph, distance);
 
     if (r)
         for (int i = 0; i < vertex_count; ++i)
@@ -427,7 +434,6 @@ int test_bgl_example() {
     //bgl example
     const int vertex_count = 5;
     const int edge_count = 10;
-    const int root_vertex = 4;
 
     //Vertex weights don't matter for bellman
     Vertex vertices[] = {
@@ -453,8 +459,8 @@ int test_bgl_example() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    int distance[vertex_count];
-    bool r = bellman(graph, distance, root_vertex);
+    int distance[vertex_count+1];
+    bool r = bellman(graph, distance);
 
     if (r)
         for (int i = 0; i < vertex_count; ++i)

@@ -1,4 +1,4 @@
-//#define OPT1DEBUG
+#define OPT1DEBUG
 //#define OPT2DEBUG
 #define CIRCUITGENDEBUG
 //#define FEASDEBUG
@@ -139,23 +139,24 @@ int test_opt1() {
 int test_opt1_2() {
     //Correlator1
     const int vertex_count = 5;
-    const int edge_count = 5;
+    const int edge_count = 6;
     const int root_vertex = 0;
 
     Vertex vertices[] = {
-        Vertex(0),
-        Vertex(7),
         Vertex(1),
-        Vertex(3),
+        Vertex(0),
+        Vertex(2),
+        Vertex(1),
         Vertex(0),
     };
 
     Edge edges[] = { 
-        Edge(0, 1, 2),
-        Edge(1, 2, 1),
+        Edge(0, 4, 2),
+        Edge(1, 4, 1),
+        Edge(1, 2, 0),
+        Edge(2, 4, 1),
+        Edge(2, 4, 1),
         Edge(2, 3, 0),
-        Edge(3, 4, 1),
-        Edge(4, 0, 0),
     };
 
 
@@ -418,15 +419,13 @@ int main() {
     printf("\n\n------------ TEST OPT2 ------------\n");
     test_opt2();
 
+
     printf("\n\n------------ TEST OPT1 ------------\n");
     test_opt1();
 
-
     test_opt1_2();
     */
-
     printf("\n\n------------ TEST RANDOM ------------\n");
     test_random();
-
 }
 
