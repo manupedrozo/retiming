@@ -69,7 +69,7 @@ struct cycle_visitor
         // 0 weighted cycle
         cycles->push_back(cycle);
 #ifdef CYCLEFINDERDEBUG
-        printf("Added cycle: %d\n", cycles->size());
+        printf("Added cycle: %d\n", (int) cycles->size());
 #endif
     }
 };
@@ -78,9 +78,16 @@ void find_zero_weight_cycles(std::vector<std::vector<Edge *>> *cycles, Graph &gr
     using namespace boost;
     typedef adjacency_list<vecS, vecS, directedS, no_property, no_property> BGLGraph;
     BGLGraph g(graph.vertex_count);
+    int edge_count = 0;
     for(int i = 0; i < graph.edge_count; ++i) {
-        add_edge(graph.edges[i].from, graph.edges[i].to, g);
+        if(graph.edges[i].weight == 0) {
+            add_edge(graph.edges[i].from, graph.edges[i].to, g);
+            ++edge_count;
+        }
     }
+#ifdef CYCLEFINDERDEBUG
+        printf("Checking cycles in graph with %d 0-weight edges\n", edge_count);
+#endif
 
     cycle_visitor visitor(cycles, graph.edges, graph.edge_count);
     boost::hawick_circuits(g, visitor);

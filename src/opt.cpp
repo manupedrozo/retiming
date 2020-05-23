@@ -22,7 +22,7 @@
  * Bellman ALGORITHM
  * Internally builds a bgl graph from the provided vertices and edges.
  * Vertices weights are ignored.
- * Result is stored into the distance array.
+ * Result is stored into the distance array, which is required to be of size vertex_count+ 1.
  * Returns true if no negative cycle was found.
  */
 bool bellman(Graph &graph, int *distance) {
@@ -269,8 +269,16 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
         FeasResult feas_result = feas(graph, current_c, deltas);
 
         if(feas_result.r) { 
-            top = b - 1;
+            //the feas result c may be lesser than the targeted, so continue the binary search from that c.
+            if(feas_result.c < current_c) {
+                current_c = feas_result.c;
+                while(c_candidates[b] > current_c) {
+                    b--;
+                }
+            }
 
+            top = b - 1;
+            
             if(c >= 0) {
                 free(retimed_graph.vertices);
                 free(retimed_graph.edges);

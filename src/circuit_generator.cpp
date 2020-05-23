@@ -26,9 +26,9 @@ struct RandomCalculator {
     std::normal_distribution<> edge_weight_dis; // Normal distribution for edge weight.
     std::chi_squared_distribution<> vertex_weight_dis; // Chi-sq distribution for vertex weight.
 
-    RandomCalculator(): gen(rd()),
+    RandomCalculator(int edge_u, int edge_phi): gen(rd()),
                         edge_dis(0, 1), 
-                        edge_weight_dis(0, 2), 
+                        edge_weight_dis(edge_u, edge_phi), 
                         vertex_weight_dis(4.0) {}
 
     int vertex_weight() {
@@ -50,12 +50,19 @@ struct RandomCalculator {
 };
 
 Graph generate_circuit(int vertex_count) {
+    int edge_u = 0;
+    int edge_phi = 5;
+    // Probability of edge between two vertices (around 2 edges per vertex)
+    double edge_p = 2.0 / vertex_count; 
+    if (vertex_count <= 24) {
+        //edge_u = 0;
+        //edge_phi = 2;
+    } else {
+        //edge_u = 5;
+        //edge_phi = 8;
+    }
 
-    double edge_p = 0.15; // Probability of edge between two vertices
-    if (vertex_count < 10)
-        edge_p = 0.3;
-
-    RandomCalculator rand;
+    RandomCalculator rand(edge_u, edge_phi);
 
     std::vector<Edge> edges_v;
 

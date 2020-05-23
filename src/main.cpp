@@ -6,6 +6,9 @@
 //#define CPDEBUG
 #define DEBUGRETCHECKER
 
+#include <iostream>
+#include <iomanip>
+
 #include "types.h"
 #include "graph_printer.cpp" 
 #include "circuit_generator.cpp" 
@@ -14,9 +17,6 @@
 #include "cp.cpp"
 #include "feas.cpp"
 #include "retiming_checker.cpp"
-
-#include <iostream>
-#include <iomanip>
 
 void print_wd(WDEntry *WD, int vertex_count) {
     std::cout << "---- W ----" << std::endl;
@@ -337,7 +337,7 @@ int test_opt2() {
 
 int test_random() {
     // Random circuit
-    Graph graph = generate_circuit(10);
+    Graph graph = generate_circuit(50);
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
 
@@ -418,10 +418,12 @@ int test_random() {
 }
 
 void test_n_random(int n, int vertex_count) {
+    printf("- Testing %d graphs with %d vertex -\n", n, vertex_count);
     for(int i = 0; i < n; ++i) {
         printf("- CIRCUIT %d -\n", i);
         Graph graph = generate_circuit(vertex_count);
         int edge_count = graph.edge_count;
+        printf("Edges: %d\n", edge_count);
 
         int *deltas = (int *) malloc(sizeof(int) * vertex_count);
         int c = cp(graph, deltas);
@@ -431,6 +433,7 @@ void test_n_random(int n, int vertex_count) {
         WDEntry* WD = wd_algorithm(graph);
 
         OptResult result1 = opt1(graph, WD);
+        printf("opt1 done\n");
         OptResult result2 = opt2(graph, WD);
 
         if(result1.r && result1.c < c) {
@@ -466,7 +469,6 @@ int main() {
 
     /*
     printf("\n\n------------ TEST OPT2 ------------\n");
-    test_opt2();
 
 
     printf("\n\n------------ TEST OPT1 ------------\n");
@@ -475,8 +477,9 @@ int main() {
     test_opt1_2();
 
     printf("\n\n------------ TEST RANDOM ------------\n");
-    */
-    test_n_random(10, 10);
     test_random();
+    test_opt2();
+    */
+    test_n_random(1, 100);
 }
 
