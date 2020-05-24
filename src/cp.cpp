@@ -37,20 +37,16 @@ int cp(Graph &graph, int *deltas) {
     Vertex *vertices = graph.vertices;
     int vertex_count = graph.vertex_count;
 
-    //Get edges with weight 0 and their vertices
-    std::list<Edge *> g0_edges;
-    for (int i = graph.edge_count-1; i >= 0; --i) {
-        if(edges[i].weight == 0) {
-            g0_edges.push_front(&edges[i]);
-        }
-    }
-
-    int g0_edge_count = g0_edges.size();
     BGLGraph g(vertex_count);
 
-    for(Edge *edge: g0_edges) {
-        add_edge(edge->from, edge->to, g);
-        //printf("Added edge %d -> %d", edge->from, edge->to);
+    //Get edges with weight 0
+    std::vector<std::vector<int>> dependencies(vertex_count); //dependency matrix for quick look-up when calculating deltas
+    for (int i = 0; i < graph.edge_count; ++i) {
+        Edge edge = edges[i];
+        if(edge.weight == 0) {
+            dependencies[edge.to].push_back(edge.from);
+            add_edge(edge.from, edge.to, g);
+        }
     }
 
     std::vector<BGLVertex> sorted_vertices;
@@ -62,12 +58,10 @@ int cp(Graph &graph, int *deltas) {
         int vertex = *i;
 
         int delta = 0;
-        for (Edge *edge : g0_edges) {
-            if(edge->to == vertex) {
-                int d_delta = deltas[edge->from];
-                if(d_delta > delta)
-                    delta = d_delta;
-            }
+        for (int i = 0; i < dependencies[vertex].size(); ++i) {
+            int d_delta = deltas[dependencies[vertex][i]];
+            if(d_delta > delta)
+                delta = d_delta;
         }
         delta += vertices[vertex].weight;
         deltas[vertex] = delta;

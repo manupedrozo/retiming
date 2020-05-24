@@ -23,26 +23,49 @@ Graph graphs[] = {
 
 /**
  * Benchmark cp algorithm
- *  - E^2, although the paper says its O(E) -> maybe because of the topological sort?
+ *  - Almost E^2, although the paper says its O(E) -> BGL topological sort is O(E+V)
  */
 void BM_cp(benchmark::State& state) {
-    int vertex_count = state.range(0);
-    Graph graph = generate_circuit(vertex_count);
+    int index = state.range(0);
+    Graph graph = graphs[index];
+    int *deltas = (int *) malloc(sizeof(int) * graph.vertex_count);
     for(auto _ : state) {
-        state.PauseTiming();
-        int *deltas = (int *) malloc(sizeof(int) * vertex_count);
-        state.ResumeTiming();
-
         cp(graph, deltas);
+    }
+    free(deltas);
+    state.SetComplexityN(graph.vertex_count + 2*graph.edge_count);
+}
 
+/**
+ * Benchmark feas algorithm
+ */
+void BM_feas(benchmark::State& state) {
+    int index = state.range(0);
+    Graph graph = graphs[index];
+    WDEntry *WD = wd_algorithm(graph);
+    OptResult result = opt1(graph, WD);
+    int *deltas = (int *) malloc(sizeof(int) * graph.vertex_count);
+    int target_c = result.c;
+    if(result.r) {
+        free(result.graph.vertices);
+        free(result.graph.edges);
+    }
+    free(WD);
+    for(auto _ : state) {
+
+        FeasResult feas_result = feas(graph, target_c, deltas);
+        
         state.PauseTiming();
-        free(deltas);
+        if(feas_result.r) { 
+                free(feas_result.graph.vertices);
+                free(feas_result.graph.edges);
+        }
         state.ResumeTiming();
     }
-    free(graph.vertices);
-    free(graph.edges);
-    state.SetComplexityN(graph.edge_count);
+    free(deltas);
+    state.SetComplexityN(graph.vertex_count * graph.edge_count);
 }
+
 
 /**
  * Benchmark bellman algorithm when solving a system of linear inequalities, just like in the OPT1 algorithm, using the original clock period as the target c.
@@ -220,14 +243,55 @@ void BM_opt12(benchmark::State& state) {
     state.SetComplexityN(graph.vertex_count);
 }
 
+void BM_topology(benchmark::State& state) {
+    using namespace boost;
+    typedef adjacency_list<vecS, vecS, directedS> BGLGraph;
+    typedef boost::graph_traits<BGLGraph>::vertex_descriptor BGLVertex;
+
+    int index = state.range(0);
+    Graph graph = graphs[index];
+
+    Edge *edges = graph.edges;
+    Vertex *vertices = graph.vertices;
+    int vertex_count = graph.vertex_count;
+
+    std::list<Edge *> g0_edges;
+    for (int i = graph.edge_count-1; i >= 0; --i) {
+        if(edges[i].weight == 0) {
+            g0_edges.push_front(&edges[i]);
+        }
+    }
+
+    int g0_edge_count = g0_edges.size();
+    BGLGraph g(vertex_count);
+
+    for(Edge *edge: g0_edges) {
+        add_edge(edge->from, edge->to, g);
+    }
+
+    for(auto _ : state) {
+        state.PauseTiming();
+        std::vector<BGLVertex> sorted_vertices;
+        state.ResumeTiming();
+
+        topological_sort(g, std::back_inserter(sorted_vertices));
+    }
+
+    state.SetComplexityN(graph.vertex_count + graph.edge_count);
+}
+
 //BENCHMARK(BM_InsertSort)->RangeMultiplier(2)->Range(1<<10, 1<<18)->Complexity();
 
 //BENCHMARK(BM_bellman)->RangeMultiplier(2)->Range(1<<3, 1<<11)->Complexity();
 //BENCHMARK(BM_opt1)->RangeMultiplier(2)->Range(1<<3, 1<<11)->Complexity();
 //BENCHMARK(BM_opt2)->RangeMultiplier(2)->Range(1<<3, 1<<11)->Complexity();
-BENCHMARK(BM_cp)->RangeMultiplier(2)->Range(1<<3, 1<<11)->Complexity();
 //BENCHMARK(BM_opt22)->DenseRange(0, 6)->Complexity();
 //BENCHMARK(BM_opt12)->DenseRange(0, 6)->Complexity();
+BENCHMARK(BM_topology)->DenseRange(0, 8)->Complexity(benchmark::oN);
+BENCHMARK(BM_cp)->DenseRange(0, 8)->Complexity(benchmark::oN);
+//BENCHMARK(BM_feas)->DenseRange(0, 8)->Complexity(benchmark::oN);
+
+
 
 BENCHMARK_MAIN();
 

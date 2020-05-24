@@ -480,6 +480,6 @@ int main() {
     test_random();
     test_opt2();
     */
-    test_n_random(1, 100);
+    test_n_random(5, 100);
 }
 
