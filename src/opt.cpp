@@ -120,7 +120,6 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         std::list<Edge> opt_edges2;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
-                //if(u == v) continue;
                 entry = WD[u * vertex_count + v];
                 //check the requirements on D(u,v)
                 if(entry.D > current_c && (entry.D - vertices[u].weight <= current_c) && (entry.D - vertices[v].weight <= current_c)) {

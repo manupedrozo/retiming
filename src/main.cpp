@@ -433,7 +433,6 @@ void test_n_random(int n, int vertex_count) {
         WDEntry* WD = wd_algorithm(graph);
 
         OptResult result1 = opt1(graph, WD);
-        printf("opt1 done\n");
         OptResult result2 = opt2(graph, WD);
 
         if(result1.r && result1.c < c) {
@@ -480,6 +479,6 @@ int main() {
     test_random();
     test_opt2();
     */
-    test_n_random(5, 100);
+    test_n_random(10, 500);
 }
 
