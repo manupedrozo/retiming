@@ -53,11 +53,13 @@ struct WDEdgeWeight {
  * Returns a WDEntry matrix.
  */
 WDEntry* wd_algorithm(Graph &graph) {
-
     using namespace boost;
-
     //typedef the graph
     typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> BGLGraph;
+
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
 
     Edge* edges = graph.edges;
     Vertex* vertices = graph.vertices;
@@ -86,6 +88,12 @@ WDEntry* wd_algorithm(Graph &graph) {
     int size = vertex_count * vertex_count;
     WDEntry* WD = (WDEntry*) malloc(sizeof(WDEntry) * size);
 
+#ifdef SPACEBENCH
+    space_bench->allocated(sizeof(int) * graph.vertex_count, false, BGLVERTEX, "BGL graph vertices");
+    space_bench->allocated(sizeof(int) * 2 * graph.edge_count, false, BGLEDGE, "BGL graph edges");
+    space_bench->allocated(sizeof(WDEntry) * graph.vertex_count * graph.vertex_count, true, INT, "WD matrix");
+#endif
+
     for (int i = 0; i < vertex_count; ++i) { 
         for (int j = 0; j < vertex_count; ++j) {
             WDEntry* entry = &WD[i * vertex_count + j];
@@ -94,6 +102,10 @@ WDEntry* wd_algorithm(Graph &graph) {
             //printf("%d,%d: %d\n", i, j , WD[i * vertex_count + j].W);
         }
     } 
+
+#ifdef SPACEBENCH
+    space_bench->pop_stack();
+#endif
 
     return WD;
 }

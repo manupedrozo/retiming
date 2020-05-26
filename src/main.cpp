@@ -479,6 +479,6 @@ int main() {
     test_random();
     test_opt2();
     */
-    test_n_random(10, 500);
+    test_n_random(1, 500);
 }
 

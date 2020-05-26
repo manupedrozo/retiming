@@ -10,6 +10,7 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
+int graph_count = 8;
 
 Graph graphs[] = {
     generate_circuit(1<<3),
@@ -28,7 +29,7 @@ int retimings[9];
 /**
  * Benchmark our blg topology algorithm usage
  * - O(V + E)
- *- Using O(E) here to compare with cp
+ * - Using O(E) here to compare with cp
  */
 void BM_topology(benchmark::State& state) {
     using namespace boost;
@@ -288,17 +289,17 @@ void BM_opt2(benchmark::State& state) {
     state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
 }
 
-//BENCHMARK(BM_bellman_full)->DenseRange(0, 8)->Complexity(benchmark::oNSquared);
+//BENCHMARK(BM_bellman_full)->DenseRange(0, graph_count)->Complexity(benchmark::oNSquared);
 
-BENCHMARK(BM_topology)->DenseRange(0, 8)->Complexity(benchmark::oN);
-BENCHMARK(BM_cp)->DenseRange(0, 8)->Complexity(benchmark::oN);
+BENCHMARK(BM_topology)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_cp)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_WD)->DenseRange(0, 8)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt1)->DenseRange(0, 8)->Complexity(benchmark::oN);
-BENCHMARK(BM_bellman)->DenseRange(0, 8)->Complexity(benchmark::oNSquared);
+BENCHMARK(BM_WD)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt1)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_bellman)->DenseRange(0, graph_count)->Complexity(benchmark::oNSquared);
 
-BENCHMARK(BM_feas)->DenseRange(0, 8)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt2)->DenseRange(0, 8)->Complexity(benchmark::oN);
+BENCHMARK(BM_feas)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt2)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
 BENCHMARK_MAIN();
 

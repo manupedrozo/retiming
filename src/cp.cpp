@@ -25,6 +25,9 @@
  * Returns an array of deltas in vertex order.
  */
 int cp(Graph &graph, int *deltas) {
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
     using namespace boost;
     typedef adjacency_list<vecS, vecS, directedS> BGLGraph;
     typedef boost::graph_traits<BGLGraph>::vertex_descriptor BGLVertex;
@@ -49,8 +52,19 @@ int cp(Graph &graph, int *deltas) {
         }
     }
 
-    std::vector<BGLVertex> sorted_vertices;
+    std::vector<BGLVertex> sorted_vertices(vertex_count);
     topological_sort(g, std::back_inserter(sorted_vertices));
+
+#ifdef SPACEBENCH
+    space_bench->allocated(sizeof(int) * graph.vertex_count, false, BGLVERTEX, "BGL graph vertices");
+    space_bench->allocated(sizeof(int) * 2 * graph.edge_count, false, BGLEDGE, "BGL graph edges");
+    int dependencies_size = 0;
+    for (int i = 0; i < vertex_count; ++i) {
+        dependencies_size += dependencies[i].size();
+    }
+    space_bench->allocated(sizeof(int) * dependencies_size, false, INT, "dependencies");
+    space_bench->allocated(sizeof(int) * graph.vertex_count, false, INT, "topologically sorted vertices");
+#endif
 
     int c = 0; //clock period (max delta)
 
@@ -71,6 +85,10 @@ int cp(Graph &graph, int *deltas) {
         printf("%d: delta = %d\n", vertex, delta);
 #endif
     }
+
+#ifdef SPACEBENCH
+    space_bench->pop_stack();
+#endif
 
     return c;     
 }

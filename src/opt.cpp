@@ -62,6 +62,10 @@ struct OptResult {
  * Returns an OptResult.
  */
 OptResult opt1(Graph &graph, WDEntry *WD) {
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
+
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
     Edge *edges = graph.edges;
@@ -73,6 +77,9 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     int* c_candidates;
     int c_count;
     {
+#ifdef SPACEBENCH
+        space_bench->push_stack();
+#endif
         std::set<int> c_candidates_set;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
@@ -89,6 +96,11 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
             c_candidates[k] = c;
             ++k;
         }
+#ifdef SPACEBENCH
+        space_bench->allocated(sizeof(int) * c_count, false, INT, "c candidates set");
+        space_bench->allocated(sizeof(int) * c_count, true, INT, "c candidates array");
+        space_bench->pop_stack();
+#endif
     }
 
     //Get edges for 7.1 (the same for every c)
@@ -98,9 +110,15 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     }
 
     int c = -1; //best c
-    int *distance = (int *) malloc(sizeof(int) * (vertex_count + 1));;//distance array of best c
-    int *tmp_distance = (int *) malloc(sizeof(int) * (vertex_count + 1));//distance array of current c
+    int *distance = (int *) malloc(sizeof(int) * (vertex_count+1));;//distance array of best c
+    int *tmp_distance = (int *) malloc(sizeof(int) * (vertex_count+1));//distance array of current c
     int *aux_distance;//aux for swapping between distance and temp_distance
+
+#ifdef SPACEBENCH
+        space_bench->allocated(sizeof(Edge) * edge_count, true, EDGE, "opt edges for 7.1");
+        space_bench->allocated(sizeof(int) * (vertex_count+1), true, INT, "distance array");
+        space_bench->allocated(sizeof(int) * (vertex_count+1), true, INT, "tmp distance array");
+#endif
 
     //Binary search ordered c values
     int b, current_c;
@@ -152,6 +170,12 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
 
         Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
 
+#ifdef SPACEBENCH
+        space_bench->push_stack();
+        space_bench->allocated(sizeof(Edge) * opt_edges2.size(), false, EDGE, "opt edges for 7.2");
+        space_bench->allocated(sizeof(Edge) * opt_edge_count, true, EDGE, "merged opt edges");
+#endif
+
         //Run bellman
         bool r = bellman(opt_graph, tmp_distance); 
 
@@ -176,6 +200,11 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
             std::cout << "Negative cycle" << std::endl;
 #endif
         }
+
+#ifdef SPACEBENCH
+        space_bench->deallocated(sizeof(Edge) * opt_edge_count, EDGE, "merged opt edges");
+        space_bench->pop_stack();
+#endif
     }
 
     //If no retiming was found, return base graph as best retiming.
@@ -199,6 +228,10 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
             retimed_vertices[i] = Vertex(distance[i]);
         }
 
+#ifdef SPACEBENCH
+        space_bench->allocated(sizeof(Vertex) * vertex_count, true, VERTEX, "retimed vertices");
+#endif
+
         Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);
         result = {true, c, retimed};
     } 
@@ -206,6 +239,13 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     free(c_candidates);
     free(tmp_distance);
     free(distance);
+
+#ifdef SPACEBENCH
+        space_bench->deallocated(sizeof(int) * c_count, INT, "c candidates array");
+        space_bench->deallocated(sizeof(int) * (vertex_count+1), INT, "distance array");
+        space_bench->deallocated(sizeof(int) * (vertex_count+1), INT, "tmp distance array");
+        space_bench->pop_stack();
+#endif
 
     return result;
 }
