@@ -31,7 +31,7 @@ struct Allocation {
 };
 
 //Keeps track of allocations and deallocations for the current space benchmark.
-struct SpaceBench{
+struct SpaceBench {
     std::vector<Allocation> stack_allocations;
     std::vector<Allocation> heap_allocations;
     int stack_bases[10];

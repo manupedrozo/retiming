@@ -10,7 +10,7 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
-int graph_count = 9; //max index
+const int graph_count = 9; //max index
 
 Graph graphs[] = {
     generate_circuit(1<<3),
@@ -89,7 +89,7 @@ void BM_cp(benchmark::State& state) {
  * Benchmark WD algorithm
  * - O(log(V) * V^2 + V * E)
  */
-void BM_WD(benchmark::State& state) {
+void BM_wd(benchmark::State& state) {
     int index = state.range(0);
     Graph graph = graphs[index];
     for(auto _ : state) {
@@ -295,7 +295,7 @@ void BM_opt2(benchmark::State& state) {
 BENCHMARK(BM_topology)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 BENCHMARK(BM_cp)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_WD)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_wd)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt1)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 BENCHMARK(BM_bellman) ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 

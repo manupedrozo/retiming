@@ -52,7 +52,7 @@ struct WDEdgeWeight {
  * The edges built into the graph are weighted according to the WD algorithm requirements.
  * Returns a WDEntry matrix.
  */
-WDEntry* wd(Graph &graph) {
+WDEntry *wd(Graph &graph) {
 #ifdef SPACEBENCH
     space_bench->push_stack();
 #endif
