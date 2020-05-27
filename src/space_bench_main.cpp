@@ -84,7 +84,7 @@ void SBM_wd() {
         space_bench->allocated(sizeof(Edge) * graph.edge_count, true, EDGE);
 
 
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
 
         free(WD);
 
@@ -119,7 +119,7 @@ void SBM_opt1() {
         space_bench->allocated(sizeof(Vertex) * graph.vertex_count, true, VERTEX);
         space_bench->allocated(sizeof(Edge) * graph.edge_count, true, EDGE);
 
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
         OptResult result = opt1(graph, WD);
 
         free(WD);
@@ -206,7 +206,7 @@ void SBM_opt2() {
         space_bench->allocated(sizeof(Vertex) * graph.vertex_count, true, VERTEX);
         space_bench->allocated(sizeof(Edge) * graph.edge_count, true, EDGE);
 
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
         OptResult result = opt2(graph, WD);
 
         free(WD);

@@ -419,7 +419,7 @@ int main_opt1() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    WDEntry* WD = wd_algorithm(graph);
+    WDEntry* WD = wd(graph);
 
     OptResult result = opt1(graph, WD);
 

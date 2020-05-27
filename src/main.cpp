@@ -153,7 +153,7 @@ int test_opt1() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
 
-    WDEntry* WD = wd_algorithm(graph);
+    WDEntry* WD = wd(graph);
 
     OptResult result = opt1(graph, WD);
 
@@ -214,7 +214,7 @@ int test_opt2() {
 
     Graph graph(vertices, edges, vertex_count, edge_count);
     
-    WDEntry* WD = wd_algorithm(graph);
+    WDEntry* WD = wd(graph);
 
     OptResult result = opt2(graph, WD);
 
@@ -256,7 +256,7 @@ int test_random() {
     printf("initial C = %d\n", c);
     free(deltas);
 
-    WDEntry* WD = wd_algorithm(graph);
+    WDEntry* WD = wd(graph);
  
     print_wd(WD, vertex_count);
 
@@ -347,7 +347,7 @@ void test_n_random(int n, int vertex_count) {
         printf("initial C = %d\n", c);
         free(deltas);
 
-        WDEntry* WD = wd_algorithm(graph);
+        WDEntry* WD = wd(graph);
 
         OptResult result1 = opt1(graph, WD);
         OptResult result2 = opt2(graph, WD);

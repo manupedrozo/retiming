@@ -93,7 +93,7 @@ void BM_WD(benchmark::State& state) {
     int index = state.range(0);
     Graph graph = graphs[index];
     for(auto _ : state) {
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
 
         state.PauseTiming();
         free(WD);
@@ -119,7 +119,7 @@ void BM_bellman_full(benchmark::State& state) {
     int c = cp(graph, deltas);
     free(deltas);
 
-    WDEntry *WD = wd_algorithm(graph);
+    WDEntry *WD = wd(graph);
 
     //Get edges for 7.1
     Edge *opt_edges1 = (Edge *) malloc(sizeof(Edge) * edge_count);
@@ -171,7 +171,7 @@ void BM_bellman(benchmark::State& state) {
 
     int c = retimings[index];
 
-    WDEntry *WD = wd_algorithm(graph);
+    WDEntry *WD = wd(graph);
 
     //Get edges for 7.1
     Edge *opt_edges1 = (Edge *) malloc(sizeof(Edge) * edge_count);
@@ -225,7 +225,7 @@ void BM_opt1(benchmark::State& state) {
     //printf("vertices: %d\tedges: %d\n", graph.vertex_count, graph.edge_count);
     for(auto _ : state) {
 
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
         OptResult result = opt1(graph, WD);
 
         state.PauseTiming();
@@ -276,7 +276,7 @@ void BM_opt2(benchmark::State& state) {
     //printf("vertices: %d\tedges: %d\n", graph.vertex_count, graph.edge_count);
     for(auto _ : state) {
 
-        WDEntry *WD = wd_algorithm(graph);
+        WDEntry *WD = wd(graph);
         OptResult result = opt2(graph, WD);
 
         state.PauseTiming();
