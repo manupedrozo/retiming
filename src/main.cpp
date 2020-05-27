@@ -182,98 +182,6 @@ int test_opt1() {
     return 0;
 }
 
-int test_opt1_2() {
-    //Correlator1
-    const int vertex_count = 5;
-    const int edge_count = 6;
-    const int root_vertex = 0;
-
-    Vertex vertices[] = {
-        Vertex(1),
-        Vertex(0),
-        Vertex(2),
-        Vertex(1),
-        Vertex(0),
-    };
-
-    Edge edges[] = { 
-        Edge(0, 4, 2),
-        Edge(1, 4, 1),
-        Edge(1, 2, 0),
-        Edge(2, 4, 1),
-        Edge(2, 4, 1),
-        Edge(2, 3, 0),
-    };
-
-
-    Graph graph(vertices, edges, vertex_count, edge_count);
-
-    to_dot(graph, "graph.dot");
-
-    int *deltas = (int *) malloc(sizeof(int) * vertex_count);
-    int c = cp(graph, deltas);
-    printf("initial C = %d\n", c);
-    free(deltas);
-
-    WDEntry* WD = wd_algorithm(graph);
-
-    print_wd(WD, vertex_count);
-
-    std::cout << "------ OPT1 ------" << std::endl;
-    OptResult result = opt1(graph, WD);
-
-    if(result.r) {
-        printf("C = %d\n", result.c);
-        Graph retimed = result.graph;
-        printf("--- RETIMED EDGES --- \n");
-        for (int i = 0; i < edge_count; ++i) {
-            printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
-        }
-        printf("--- r(Vi) --- \n");
-        for (int i = 0; i < vertex_count; ++i) {
-            printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
-        }
-
-        to_dot(retimed, "opt1.dot");
-
-        free(retimed.vertices);
-        free(retimed.edges);
-    } else {
-        printf("--- No retiming found --- \n");
-    }
-
-    std::cout << "------ OPT2 ------" << std::endl;
-    result = opt2(graph, WD);
-
-    if(result.r) {
-        printf("C = %d\n", result.c);
-        Graph retimed = result.graph;
-        printf("--- RETIMED EDGES --- \n");
-        for (int i = 0; i < edge_count; ++i) {
-            printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
-        }
-        printf("--- r(Vi) --- \n");
-        for (int i = 0; i < vertex_count; ++i) {
-            printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
-        }
-
-        to_dot(retimed, "opt2.dot");
-
-        free(retimed.vertices);
-        free(retimed.edges);
-    } else {
-        printf("--- No retiming found --- \n");
-    }
-
-    printf("original = %d\nretimed = %d\n", c, result.c);
-
-    free(WD);
-
-    return 0;
-
-    return 0;
-}
-
 int test_opt2() {
     //Correlator1
     const int vertex_count = 8;
@@ -417,6 +325,7 @@ int test_random() {
     return 0;
 }
 
+//Test opt1 and opt2 with n random circuits with the given amount of vertex
 void test_n_random(int n, int vertex_count) {
     printf("- Testing %d graphs with %d vertex -\n", n, vertex_count);
     for(int i = 0; i < n; ++i) {
@@ -424,6 +333,14 @@ void test_n_random(int n, int vertex_count) {
         Graph graph = generate_circuit(vertex_count);
         int edge_count = graph.edge_count;
         printf("Edges: %d\n", edge_count);
+
+        int zero_count = 0;
+        for(int j = 0; j < edge_count; ++j) {
+            if(graph.edges[j].weight == 0)
+                ++zero_count;
+        }
+        printf("Zero edges: %d\n", zero_count);
+
 
         int *deltas = (int *) malloc(sizeof(int) * vertex_count);
         int c = cp(graph, deltas);
@@ -468,17 +385,15 @@ int main() {
 
     /*
     printf("\n\n------------ TEST OPT2 ------------\n");
+    test_opt2();
 
 
     printf("\n\n------------ TEST OPT1 ------------\n");
     test_opt1();
 
-    test_opt1_2();
-
     printf("\n\n------------ TEST RANDOM ------------\n");
     test_random();
-    test_opt2();
     */
-    test_n_random(1, 500);
+    test_n_random(5, 500);
 }
 

@@ -53,13 +53,12 @@ struct WDEdgeWeight {
  * Returns a WDEntry matrix.
  */
 WDEntry* wd_algorithm(Graph &graph) {
-    using namespace boost;
-    //typedef the graph
-    typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> BGLGraph;
-
 #ifdef SPACEBENCH
     space_bench->push_stack();
 #endif
+    using namespace boost;
+    //typedef the graph
+    typedef adjacency_list<vecS, vecS, directedS, no_property, property<edge_weight_t, WDEdgeWeight, property<edge_weight2_t, WDEdgeWeight>>> BGLGraph;
 
     Edge* edges = graph.edges;
     Vertex* vertices = graph.vertices;

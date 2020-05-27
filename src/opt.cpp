@@ -22,10 +22,13 @@
  * Bellman ALGORITHM
  * Internally builds a bgl graph from the provided vertices and edges.
  * Vertices weights are ignored.
- * Result is stored into the distance array, which is required to be of size vertex_count+ 1.
+ * Result is stored into the distance array, which is required to be of size vertex_count+1.
  * Returns true if no negative cycle was found.
  */
 bool bellman(Graph &graph, int *distance) {
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
     using namespace boost;
     typedef adjacency_list <vecS, vecS, directedS, no_property, property<edge_weight_t, int>> BGLGraph;
 
@@ -38,6 +41,11 @@ bool bellman(Graph &graph, int *distance) {
         add_edge(edges[i].from, edges[i].to, edges[i].weight, g);
     }
 
+#ifdef SPACEBENCH
+    space_bench->allocated(sizeof(int) * graph.vertex_count, false, BGLVERTEX, "BGL graph vertices");
+    space_bench->allocated(sizeof(int) * 2 * graph.edge_count, false, BGLEDGE, "BGL graph edges");
+#endif
+
     // Add a new vertex (root) with an edge to each other vertex to guarantee reachability
     for(int i = 0; i < vertex_count; ++i) {
         add_edge(vertex_count, i, 0, g);
@@ -46,6 +54,10 @@ bool bellman(Graph &graph, int *distance) {
     distance[vertex_count] = 0;
 
     bool r = bellman_ford_shortest_paths(g, distance_map(distance).root_vertex(vertex_count));
+
+#ifdef SPACEBENCH
+    space_bench->pop_stack();
+#endif
 
     return r;
 }
@@ -256,12 +268,18 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
  * Returns an OptResult.
  */
 OptResult opt2(Graph &graph, WDEntry *WD) {
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
     Edge *edges = graph.edges;
     Vertex *vertices = graph.vertices;
 
     int *deltas = (int *) malloc(sizeof(int) * vertex_count);
+#ifdef SPACEBENCH
+        space_bench->allocated(sizeof(int) * vertex_count, true, INT, "deltas");
+#endif
 
     WDEntry entry;
 
@@ -269,6 +287,9 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
     int* c_candidates;
     int c_count;
     {
+#ifdef SPACEBENCH
+        space_bench->push_stack();
+#endif
         std::set<int> c_candidates_set;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
@@ -285,6 +306,11 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
             c_candidates[k] = c;
             ++k;
         }
+#ifdef SPACEBENCH
+        space_bench->allocated(sizeof(int) * c_count, false, INT, "c candidates set");
+        space_bench->allocated(sizeof(int) * c_count, true, INT, "c candidates array");
+        space_bench->pop_stack();
+#endif
     }
 
     Graph retimed_graph;
@@ -337,6 +363,10 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
 
             free(feas_result.graph.vertices);
             free(feas_result.graph.edges);
+#ifdef SPACEBENCH
+        space_bench->deallocated(sizeof(Vertex) * feas_result.graph.vertex_count, INT, "feas result vertices");
+        space_bench->deallocated(sizeof(Edge) * feas_result.graph.edge_count, INT, "feas result edges");
+#endif
 
 #ifdef OPT2DEBUG
             std::cout << "No retiming found for c: " << current_c << std::endl;
@@ -346,6 +376,11 @@ OptResult opt2(Graph &graph, WDEntry *WD) {
 
     free(deltas);
     free(c_candidates);
+#ifdef SPACEBENCH
+        space_bench->deallocated(sizeof(int) * vertex_count, INT, "deltas");
+        space_bench->deallocated(sizeof(int) * c_count, INT, "c candidates array");
+        space_bench->pop_stack();
+#endif
 
     if(c >= 0) return {true, c, retimed_graph};
     else return {false, c, graph};;

@@ -10,7 +10,7 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
-int graph_count = 8;
+int graph_count = 9; //max index
 
 Graph graphs[] = {
     generate_circuit(1<<3),
@@ -22,9 +22,10 @@ Graph graphs[] = {
     generate_circuit(1<<9),
     generate_circuit(1<<10),
     generate_circuit(1<<11),
+    generate_circuit(1<<12),
 };
 
-int retimings[9];
+int retimings[graph_count+1];
 
 /**
  * Benchmark our blg topology algorithm usage
@@ -158,7 +159,7 @@ void BM_bellman_full(benchmark::State& state) {
     free(opt_edges);
     free(distance);
 
-    state.SetComplexityN(graph.vertex_count);
+    state.SetComplexityN(pow(graph.vertex_count, 2));
 } 
 void BM_bellman(benchmark::State& state) {
     int index = state.range(0);
@@ -216,7 +217,7 @@ void BM_bellman(benchmark::State& state) {
 /**
  * Benchmark opt1 algorithm
  * - O(V^3 * log(V))
- * - Pretty much correct, depends on the run, sometimes a little less
+ * - Usually less, see bellman
  */
 void BM_opt1(benchmark::State& state) {
     int index = state.range(0);
@@ -292,14 +293,14 @@ void BM_opt2(benchmark::State& state) {
 //BENCHMARK(BM_bellman_full)->DenseRange(0, graph_count)->Complexity(benchmark::oNSquared);
 
 BENCHMARK(BM_topology)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_cp)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_cp)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_WD)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt1)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_bellman)->DenseRange(0, graph_count)->Complexity(benchmark::oNSquared);
+BENCHMARK(BM_WD)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt1)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_bellman) ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_feas)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt2)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_feas)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt2)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
 
 BENCHMARK_MAIN();
 

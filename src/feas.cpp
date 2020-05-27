@@ -24,6 +24,9 @@ struct FeasResult {
  * Returns a FeasResult
  */
 FeasResult feas(Graph &graph, int target_c, int *deltas) {
+#ifdef SPACEBENCH
+    space_bench->push_stack();
+#endif
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
 
@@ -40,6 +43,11 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
         Edge edge = graph.edges[j];
         retimed_edges[j] = { edge.from, edge.to, edge.weight };
     }
+
+#ifdef SPACEBENCH
+    space_bench->allocated(sizeof(Edge) * edge_count, true, EDGE, "retimed edges");
+    space_bench->allocated(sizeof(int) * vertex_count, false, INT, "vertex retimings");
+#endif
 
     bool changed = true;
     //int retime_count = 0;
@@ -76,6 +84,10 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     for (int i = 0; i < vertex_count; ++i) {
         retimed_vertices[i] = Vertex(retiming[i]);// - retime_count);
     }
+#ifdef SPACEBENCH
+    space_bench->allocated(sizeof(Vertex) * vertex_count, true, VERTEX, "retimed vertex");
+    space_bench->pop_stack();
+#endif
 
     //Build retimed graph
     Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);

@@ -4,10 +4,10 @@
 
 //#define DEBUGSPACEBENCH
 
-const int types_count = 6;
+const int types_count = 5;
 
 enum AllocType {
-    OTHER,
+    //OTHER,
     INT,
     VERTEX,
     EDGE,
@@ -16,7 +16,7 @@ enum AllocType {
 };
 
 const char *type_strings[] = {
-    "other",
+    //"other",
     "int",
     "vertex",
     "edge",
@@ -30,6 +30,7 @@ struct Allocation {
     std::string extra_info;
 };
 
+//Keeps track of allocations and deallocations for the current space benchmark.
 struct SpaceBench{
     std::vector<Allocation> stack_allocations;
     std::vector<Allocation> heap_allocations;
@@ -70,7 +71,7 @@ struct SpaceBench{
         --current_stack;
     }
 
-    void allocated(size_t size, bool heap, AllocType type = OTHER, std::string extra_info = "") {
+    void allocated(size_t size, bool heap, AllocType type, std::string extra_info = "") {
         if (heap) {
             heap_size += size;
             if(heap_size > max_heap) max_heap = heap_size;
@@ -90,7 +91,7 @@ struct SpaceBench{
         if(per_type[type] > max_per_type[type]) max_per_type[type] = per_type[type];
     }
 
-    void deallocated(size_t size, AllocType type = OTHER, std::string extra_info = "") {
+    void deallocated(size_t size, AllocType type, std::string extra_info = "") {
         assert(heap_size > heap_size - size);
         heap_size -= size;
         per_type[type] -= size;
