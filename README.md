@@ -45,7 +45,7 @@ What is in each file:
 	- **Edge**: An Edge is composed by the *from* and *to* vertex ids and a *weight* value.
 
 - ***cp.cpp***: CP algorithm.
-	- **int cp(Graph &graph, int deltas)**
+	- **int cp(Graph &graph, int \*deltas)**
 		- graph: Graph to calculate cp on.
 		- deltas: array of size graph.vertex_count to calculate CP deltas on.
 		- Returns the graphs clock period.

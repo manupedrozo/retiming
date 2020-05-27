@@ -10,7 +10,8 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
-const int graph_count = 9; //max index
+const int graph_count = 12;
+const int graph_max_index = graph_count-1;
 
 Graph graphs[] = {
     generate_circuit(1<<3),
@@ -23,9 +24,11 @@ Graph graphs[] = {
     generate_circuit(1<<10),
     generate_circuit(1<<11),
     generate_circuit(1<<12),
+    generate_circuit(1<<13),
+    generate_circuit(1<<14),
 };
 
-int retimings[graph_count+1];
+int retimings[graph_count];
 
 /**
  * Benchmark our blg topology algorithm usage
@@ -72,7 +75,7 @@ void BM_topology(benchmark::State& state) {
 /**
  * Benchmark CP algorithm
  *  - O(E) 
- *  - But in reality O(E+V) -> BGL topological sort is O(E+V)
+ *  - But in reality O(V+E) -> BGL topological sort is O(V+E)
  */
 void BM_cp(benchmark::State& state) {
     int index = state.range(0);
@@ -82,12 +85,13 @@ void BM_cp(benchmark::State& state) {
         cp(graph, deltas);
     }
     free(deltas);
-    state.SetComplexityN(graph.edge_count);
+    state.SetComplexityN(graph.vertex_count + graph.edge_count);
 }
 
 /**
  * Benchmark WD algorithm
- * - O(log(V) * V^2 + V * E)
+ * - Paper: O(log(V) * V^2 + V * E)
+ * - Implementation: O(V^2 + log(V) * V * E)
  */
 void BM_wd(benchmark::State& state) {
     int index = state.range(0);
@@ -99,7 +103,7 @@ void BM_wd(benchmark::State& state) {
         free(WD);
         state.ResumeTiming();
     }
-    state.SetComplexityN(log(graph.vertex_count) * pow(graph.vertex_count, 2) + graph.vertex_count * graph.edge_count);
+    state.SetComplexityN(pow(graph.vertex_count, 2) + log(graph.vertex_count) * graph.vertex_count * graph.edge_count);
 }
 
 /**
@@ -290,17 +294,25 @@ void BM_opt2(benchmark::State& state) {
     state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
 }
 
-//BENCHMARK(BM_bellman_full)->DenseRange(0, graph_count)->Complexity(benchmark::oNSquared);
+//BENCHMARK(BM_bellman_full)->DenseRange(0, graph_max_index)->Complexity(benchmark::oNSquared);
 
-BENCHMARK(BM_topology)->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_cp)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_topology)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_cp)      ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_wd)      ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt1)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_bellman) ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_wd)      ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt1)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_bellman) ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
-BENCHMARK(BM_feas)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
-BENCHMARK(BM_opt2)    ->DenseRange(0, graph_count)->Complexity(benchmark::oN);
+BENCHMARK(BM_feas)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt2)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
-BENCHMARK_MAIN();
+//BENCHMARK_MAIN();
+int main(int argc, char** argv)
+{
+    for(int i = 0; i < graph_count; ++i) {
+        printf("Graph %d: vertices: %d, edges: %d\n", i, graphs[i].vertex_count, graphs[i].edge_count);
+    }
+    ::benchmark::Initialize(&argc, argv);
+    ::benchmark::RunSpecifiedBenchmarks();
+}
 

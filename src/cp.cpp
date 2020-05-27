@@ -52,6 +52,7 @@ int cp(Graph &graph, int *deltas) {
         }
     }
 
+    //topologically sort vertices
     std::vector<BGLVertex> sorted_vertices(vertex_count);
     topological_sort(g, std::back_inserter(sorted_vertices));
 
@@ -68,6 +69,7 @@ int cp(Graph &graph, int *deltas) {
 
     int c = 0; //clock period (max delta)
 
+    //reverse loop through sorted vertices and calculate deltas
     for (std::vector<BGLVertex>::reverse_iterator i=sorted_vertices.rbegin(); i!=sorted_vertices.rend(); ++i) {
         int vertex = *i;
 
