@@ -12,7 +12,7 @@
 #include "circuit_generator.cpp" 
 #include "types.h"
 
-const int graph_count = 12;
+const int graph_count = 10;
 
 Graph graphs[] = {
     generate_circuit(1<<3),
@@ -105,7 +105,7 @@ void SBM_wd() {
 
 /**
  * Benchmark OPT1 algorithm
- * - O(V^2 + E) ~ 1.1N
+ * - O(V^2 + E) ~ 2.1N
  * - Depends on WD
  */
 void SBM_opt1() {
@@ -192,7 +192,7 @@ void SBM_feas() {
 
 /**
  * Benchmark OPT2 algorithm
- * - O(V^2 + E) ~ 1.0N
+ * - O(V^2 + E) ~ 2.0N
  * - Depends on WD
  */
 void SBM_opt2() {
@@ -232,9 +232,9 @@ void SBM_opt2() {
 }
 
 int main() {
-    SBM_cp();
-    SBM_wd();
+    //SBM_cp();
+    //SBM_wd();
     SBM_opt1();
-    SBM_feas();
+    //SBM_feas();
     SBM_opt2();
 }

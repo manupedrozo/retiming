@@ -36,7 +36,7 @@ g++ -I <path_to_boost> [-g] -o3 space_bench_main.cpp -o build/space_bench_main
 ```
 
 ## Documentation
-Each algorithm is well annotated, so refer to them to understand each one.
+Each algorithm is well annotated, so refer to them for more details.
 
 What is in each file:
 - ***types.h***: General types declaration, including the Graph struct.
@@ -56,7 +56,7 @@ What is in each file:
 		- Returns the the resulting WD matrix.
 
 - ***feas.cpp***: FEAS algorithm.
-	- **FeasResult \*feas(Graph &graph, int target_c, int \*deltas)**
+	- **FeasResult feas(Graph &graph, int target_c, int \*deltas)**
 		- graph: Graph to calculate feas on.
 		- target_c: The target clock period.
 		- deltas: Array to calculate CP deltas.
@@ -76,7 +76,7 @@ What is in each file:
 		- WD: WD matrix as returned by wd algorithm.
 		- Returns an OptResult with the minimized clock period and the retimed graph.
 - ***retiming_checker.cpp***: Check if a retiming is legal.
-	- **bool  check_legal(Graph &graph, Graph &retimed, int c, WDEntry \*WD)**
+	- **bool check_legal(Graph &graph, Graph &retimed, int c, WDEntry \*WD)**
 		- graph: Base graph.
 		- retimed: Retimed graph.
 		- c: Clock period of the retimed graph.
@@ -91,28 +91,29 @@ What is in each file:
 - ***cycle_finder.cpp***: Find 0 weight cycles in a graph.
 	- **void find_zero_weight_cycles(std::vector<std::vector<Edge\*>> \*cycles, Graph &graph)**
 		- cycles: Vector where to store the 0 weight cycles found.
-- ***graph_printer.cpp***: Find 0 weight cycles in a graph.
-	- **void  print_graph(Graph &graph, std::string name)**
+
+- ***graph_printer.cpp***: Print a graph or generate a dot file.
+	- **void print_graph(Graph &graph, std::string name)**
 		- graph: Graph to print.
 		- name: Graphs name.
-	- **void  to_dot(Graph &graph, std::string path)**
+	- **void to_dot(Graph &graph, std::string path)**
 		- graph: Graph to translate into the dot file.
 		- path: Path to the dot file.
 	
 - ***performance_bench_main.cpp***: Performance benchmark of the algorithms.
-	-  **void BM_topology(benchmark::State& state)**
-	- **void  BM_cp(benchmark::State& state)**
-	- **void  BM_wd(benchmark::State& state)**
-	- **void  BM_bellman(benchmark::State& state)**
-	- **void  BM_opt1(benchmark::State& state)**
-	- **void  BM_feas(benchmark::State& state)**
-	- **void  BM_opt2(benchmark::State& state)**
+	- **void BM_topology(benchmark::State& state)**
+	- **void BM_cp(benchmark::State& state)**
+	- **void BM_wd(benchmark::State& state)**
+	- **void BM_bellman(benchmark::State& state)**
+	- **void BM_opt1(benchmark::State& state)**
+	- **void BM_feas(benchmark::State& state)**
+	- **void BM_opt2(benchmark::State& state)**
 
 - ***space_bench_main.cpp***: Space benchmark of the algorithms.
-	- **void  SBM_cp()**
-	- **void  SBM_wd()**
-	- **void  SBM_opt1()**
-	- **void  SBM_feas()**
-	- **void  SBM_opt2()**
+	- **void SBM_cp()**
+	- **void SBM_wd()**
+	- **void SBM_opt1()**
+	- **void SBM_feas()**
+	- **void SBM_opt2()**
 
 - ***space_bench.cpp***: Structs required to keep track of allocations and deallocations for a running space benchmark.

@@ -30,8 +30,11 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     int vertex_count = graph.vertex_count;
     int edge_count = graph.edge_count;
 
-    //Initialize r(v) = 0 for each vertex v 
-    std::vector<int> retiming(vertex_count, 0);
+    //Allocate and initialize r(v) = 0 for each vertex v 
+    Vertex *retimed_vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
+    for (int i = 0; i < vertex_count; ++i) {
+        retimed_vertices[i] = Vertex(0);
+    }
     
     Edge *retimed_edges = (Edge *) malloc(sizeof(Edge) * edge_count);
 
@@ -45,8 +48,8 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
     }
 
 #ifdef SPACEBENCH
+    space_bench->allocated(sizeof(Vertex) * vertex_count, true, VERTEX, "retimed vertices");
     space_bench->allocated(sizeof(Edge) * edge_count, true, EDGE, "retimed edges");
-    space_bench->allocated(sizeof(int) * vertex_count, false, INT, "vertex retimings");
 #endif
 
     bool changed = true;
@@ -64,7 +67,7 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
         for (int v = 0; v < vertex_count; ++v) {
             if(deltas[v] > target_c) {
                 changed = true;
-                ++retiming[v]; 
+                ++retimed_vertices[v].weight; 
             }
         }
         //if(changed) ++retime_count;
@@ -72,25 +75,19 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
         //Update retimed edges
         for (int j = 0; j < edge_count; ++j) {
             Edge edge = graph.edges[j];
-            retimed_edges[j].weight = edge.weight + retiming[edge.to] - retiming[edge.from];
+            retimed_edges[j].weight = edge.weight + retimed_vertices[edge.to].weight - retimed_vertices[edge.from].weight;
         }
     }
 
     //Run CP one last time
     int c = cp(gr, deltas);
-
-    //Calculate retimed vertices
-    Vertex *retimed_vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
-    for (int i = 0; i < vertex_count; ++i) {
-        retimed_vertices[i] = Vertex(retiming[i]);// - retime_count);
-    }
-#ifdef SPACEBENCH
-    space_bench->allocated(sizeof(Vertex) * vertex_count, true, VERTEX, "retimed vertex");
-    space_bench->pop_stack();
-#endif
-
+ 
     //Build retimed graph
     Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);
+
+#ifdef SPACEBENCH
+    space_bench->pop_stack();
+#endif
 
     return { c <= target_c, c, retimed };
 }

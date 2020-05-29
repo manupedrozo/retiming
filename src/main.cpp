@@ -171,6 +171,11 @@ int test_opt1() {
 
         to_dot(retimed, "opt1.dot");
 
+        if(check_legal(graph, retimed, result.c, WD))
+            printf("- LEGAL RETIMING - \n");
+        else 
+            printf("- ILLEGAL RETIMING!!! - \n");
+
         free(retimed.vertices);
         free(retimed.edges);
     } else {
@@ -231,6 +236,11 @@ int test_opt2() {
         }
 
         to_dot(retimed, "opt2.dot");
+
+        if(check_legal(graph, retimed, result.c, WD))
+            printf("- LEGAL RETIMING - \n");
+        else 
+            printf("- ILLEGAL RETIMING!!! - \n");
 
         free(retimed.vertices);
         free(retimed.edges);
@@ -386,7 +396,6 @@ int main() {
     /*
     printf("\n\n------------ TEST OPT2 ------------\n");
     test_opt2();
-
 
     printf("\n\n------------ TEST OPT1 ------------\n");
     test_opt1();

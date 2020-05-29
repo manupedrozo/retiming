@@ -10,7 +10,7 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
-const int graph_count = 12;
+const int graph_count = 12;//12;
 const int graph_max_index = graph_count-1;
 
 Graph graphs[] = {
@@ -75,7 +75,6 @@ void BM_topology(benchmark::State& state) {
 /**
  * Benchmark CP algorithm
  *  - O(E) 
- *  - But in reality O(V+E) -> BGL topological sort is O(V+E)
  */
 void BM_cp(benchmark::State& state) {
     int index = state.range(0);
@@ -85,13 +84,13 @@ void BM_cp(benchmark::State& state) {
         cp(graph, deltas);
     }
     free(deltas);
-    state.SetComplexityN(graph.vertex_count + graph.edge_count);
+    state.SetComplexityN(graph.edge_count);
 }
 
 /**
  * Benchmark WD algorithm
  * - Paper: O(log(V) * V^2 + V * E)
- * - Implementation: O(V^2 + log(V) * V * E)
+ * - Implementation: O(V * E * log(V))
  */
 void BM_wd(benchmark::State& state) {
     int index = state.range(0);
@@ -103,13 +102,13 @@ void BM_wd(benchmark::State& state) {
         free(WD);
         state.ResumeTiming();
     }
-    state.SetComplexityN(pow(graph.vertex_count, 2) + log(graph.vertex_count) * graph.vertex_count * graph.edge_count);
+    state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
 }
 
 /**
  * Benchmark bellman algorithm when solving a system of linear inequalities, just like in the OPT1 algorithm, using the original clock period as the target c.
- * - Around 0.5 O(V^3) when adding all the inequalities
- * - In reality O(V^2)
+ * - O(V^3): bellman is O(V*E) with the max E being V^2 (max inequalities)
+ * - Around 0.2 O(V^3) when adding all the inequalities
 */
 void BM_bellman_full(benchmark::State& state) {
     int index = state.range(0);
@@ -135,7 +134,7 @@ void BM_bellman_full(benchmark::State& state) {
     for (int u = 0; u < vertex_count; ++u) {
         for (int v = 0; v < vertex_count; ++v) {
             WDEntry entry = WD[u * vertex_count + v];
-            if(entry.D > c && (entry.D - vertices[u].weight <= c) && (entry.D - vertices[v].weight <= c)) {
+            if(entry.D > c){// && (entry.D - vertices[u].weight <= c) && (entry.D - vertices[v].weight <= c)) {
                 opt_edges2.push_front(Edge(v, u, entry.W - 1));
             }
         }
@@ -163,7 +162,7 @@ void BM_bellman_full(benchmark::State& state) {
     free(opt_edges);
     free(distance);
 
-    state.SetComplexityN(pow(graph.vertex_count, 2));
+    state.SetComplexityN(pow(graph.vertex_count, 3));
 } 
 void BM_bellman(benchmark::State& state) {
     int index = state.range(0);
@@ -215,7 +214,7 @@ void BM_bellman(benchmark::State& state) {
     free(opt_edges);
     free(distance);
 
-    state.SetComplexityN(graph.vertex_count);
+    state.SetComplexityN(pow(graph.vertex_count, 3));
 }
 
 /**
@@ -294,7 +293,7 @@ void BM_opt2(benchmark::State& state) {
     state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
 }
 
-//BENCHMARK(BM_bellman_full)->DenseRange(0, graph_max_index)->Complexity(benchmark::oNSquared);
+//BENCHMARK(BM_bellman_full)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
 BENCHMARK(BM_topology)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_cp)      ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);

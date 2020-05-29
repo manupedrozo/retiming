@@ -35,7 +35,7 @@ bool bellman(Graph &graph, int *distance) {
     Edge *edges = graph.edges;
     int vertex_count = graph.vertex_count;
 
-    BGLGraph g(vertex_count);
+    BGLGraph g(vertex_count+1);
 
     for(int i = 0; i < graph.edge_count; ++i) {
         add_edge(edges[i].from, edges[i].to, edges[i].weight, g);

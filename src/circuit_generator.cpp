@@ -54,13 +54,6 @@ Graph generate_circuit(int vertex_count) {
     int edge_phi = 5;
     // Probability of edge between two vertices (around 2 edges per vertex)
     double edge_p = 2.0 / vertex_count; 
-    if (vertex_count <= 24) {
-        //edge_u = 0;
-        //edge_phi = 2;
-    } else {
-        //edge_u = 5;
-        //edge_phi = 8;
-    }
 
     RandomCalculator rand(edge_u, edge_phi);
 
