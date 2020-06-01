@@ -10,7 +10,7 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
-const int graph_count = 12;//12;
+const int graph_count = 12;
 const int graph_max_index = graph_count-1;
 
 Graph graphs[] = {

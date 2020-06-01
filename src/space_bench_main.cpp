@@ -12,7 +12,7 @@
 #include "circuit_generator.cpp" 
 #include "types.h"
 
-const int graph_count = 10;
+const int graph_count = 12;
 
 Graph graphs[] = {
     generate_circuit(1<<3),
