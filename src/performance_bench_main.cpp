@@ -344,7 +344,6 @@ void BM_opt2(benchmark::State& state) {
 void BM_opt2_opt2_wc(benchmark::State& state) {
     int index = state.range(0);
     Graph graph = opt2_wc_graphs[index];
-    printf("%d\n", graph.vertex_count);
     for(auto _ : state) {
 
         WDEntry *WD = wd(graph);
@@ -367,7 +366,6 @@ void BM_opt2_opt2_wc(benchmark::State& state) {
 void BM_opt1_opt2_wc(benchmark::State& state) {
     int index = state.range(0);
     Graph graph = opt2_wc_graphs[index];
-    printf("%d\n", graph.vertex_count);
     for(auto _ : state) {
 
         WDEntry *WD = wd(graph);
@@ -381,11 +379,12 @@ void BM_opt1_opt2_wc(benchmark::State& state) {
         free(WD);
         state.ResumeTiming();
     }
-    state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
+    state.SetComplexityN(pow(graph.vertex_count, 3) * log(graph.vertex_count));
 }
 
 //BENCHMARK(BM_bellman_full)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
+/*
 BENCHMARK(BM_topology)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_cp)      ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
@@ -395,8 +394,9 @@ BENCHMARK(BM_bellman) ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN
 
 BENCHMARK(BM_feas)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt2)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
+*/
 
-BENCHMARK(BM_opt2_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
+//BENCHMARK(BM_opt2_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt1_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
 
 #include "graph_printer.cpp" 
