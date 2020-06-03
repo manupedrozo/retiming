@@ -342,8 +342,7 @@ void BM_opt2(benchmark::State& state) {
  * Benchmark opt2 worst case
  */
 void BM_opt2_opt2_wc(benchmark::State& state) {
-    int index = state.range(0);
-    Graph graph = opt2_wc_graphs[index];
+    araph graph = opt2_wc_graphs[index];
     for(auto _ : state) {
 
         WDEntry *WD = wd(graph);
@@ -384,7 +383,6 @@ void BM_opt1_opt2_wc(benchmark::State& state) {
 
 //BENCHMARK(BM_bellman_full)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
-/*
 BENCHMARK(BM_topology)->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_cp)      ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
@@ -394,12 +392,9 @@ BENCHMARK(BM_bellman) ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN
 
 BENCHMARK(BM_feas)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt2)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
-*/
 
-//BENCHMARK(BM_opt2_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt2_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt1_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
-
-#include "graph_printer.cpp" 
 
 //BENCHMARK_MAIN();
 int main(int argc, char** argv)
