@@ -108,6 +108,8 @@ What is in each file:
 	- **void BM_opt1(benchmark::State& state)**
 	- **void BM_feas(benchmark::State& state)**
 	- **void BM_opt2(benchmark::State& state)**
+	- **void BM_opt2_opt2_wc(benchmark::State& state)**
+	- **void BM_opt1_opt2_wc(benchmark::State& state)**
 
 - ***space_bench_main.cpp***: Space benchmark of the algorithms.
 	- **void SBM_cp()**

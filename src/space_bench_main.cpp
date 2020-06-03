@@ -69,7 +69,7 @@ void SBM_cp() {
 
 /**
  * Benchmark WD algorithm
- * - O(V^2 + E) ~ 1.0N
+ * - O(V^2 + E) ~ 2.0N
  * - The V^2 being of type WDEntry (int, int)
  */
 void SBM_wd() {
@@ -105,7 +105,7 @@ void SBM_wd() {
 
 /**
  * Benchmark OPT1 algorithm
- * - O(V^2 + E) ~ 2.1N
+ * - O(V^2 + E) ~ 2.2N
  * - Depends on WD
  */
 void SBM_opt1() {
@@ -146,7 +146,7 @@ void SBM_opt1() {
 
 /**
  * Benchmark feas algorithm
- * - O(V + E) ~ 3.2N
+ * - O(V + E) ~ 3.05N
  */
 void SBM_feas() {
     double N = 0;
@@ -232,9 +232,9 @@ void SBM_opt2() {
 }
 
 int main() {
-    //SBM_cp();
-    //SBM_wd();
+    SBM_cp();
+    SBM_wd();
     SBM_opt1();
-    //SBM_feas();
+    SBM_feas();
     SBM_opt2();
 }

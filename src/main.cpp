@@ -115,8 +115,6 @@ int test_feas() {
 
     to_dot(retimed, "feas.dot");
 
-
-    //free(deltas);
     return 0;
 }
 
@@ -253,10 +251,9 @@ int test_opt2() {
     return 0;
 }
 
-int test_random() {
+int test_random(int vertex_count) {
     // Random circuit
-    Graph graph = generate_circuit(50);
-    int vertex_count = graph.vertex_count;
+    Graph graph = generate_circuit(vertex_count);
     int edge_count = graph.edge_count;
 
     to_dot(graph, "random_circuit.dot");
@@ -268,14 +265,19 @@ int test_random() {
 
     WDEntry* WD = wd(graph);
  
-    print_wd(WD, vertex_count);
+    //print_wd(WD, vertex_count);
 
     std::cout << "------ OPT1 ------" << std::endl;
-    OptResult result = opt1(graph, WD);
+    OptResult result1 = opt1(graph, WD);
 
-    if(result.r) {
-        printf("C = %d\n", result.c);
-        Graph retimed = result.graph;
+    if(result1.r) {
+        Graph retimed = result1.graph;
+        if(result1.c < c) {
+            printf("Retiming found - C: %d\tLegal: %d\n", result1.c, check_legal(graph, retimed, result1.c, WD));
+        } else {
+            printf("No retiming found\n");
+        }
+        /*
         printf("--- RETIMED EDGES --- \n");
         for (int i = 0; i < edge_count; ++i) {
             printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
@@ -284,13 +286,9 @@ int test_random() {
         for (int i = 0; i < vertex_count; ++i) {
             printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
         }
+        */
 
-        to_dot(retimed, "random_circuit_retimed.dot");
-
-        if(check_legal(graph, retimed, result.c, WD))
-            printf("- LEGAL RETIMING - \n");
-        else 
-            printf("- ILLEGAL RETIMING!!! - \n");
+        to_dot(retimed, "random_circuit_retimed1.dot");
 
         free(retimed.vertices);
         free(retimed.edges);
@@ -299,11 +297,16 @@ int test_random() {
     }
 
     std::cout << "------ OPT2 ------" << std::endl;
-    result = opt2(graph, WD);
+    OptResult result2 = opt2(graph, WD);
 
-    if(result.r) {
-        printf("C = %d\n", result.c);
-        Graph retimed = result.graph;
+    if(result2.r) {
+        Graph retimed = result2.graph;
+        if(result2.c < c) {
+            printf("Retiming found - C: %d\tLegal: %d\n", result2.c, check_legal(graph, retimed, result2.c, WD));
+        } else {
+            printf("No retiming found\n");
+        }
+        /*
         printf("--- RETIMED EDGES --- \n");
         for (int i = 0; i < edge_count; ++i) {
             printf("(%d, %d, [%d]) \n", retimed.edges[i].from, retimed.edges[i].to, retimed.edges[i].weight);
@@ -312,21 +315,15 @@ int test_random() {
         for (int i = 0; i < vertex_count; ++i) {
             printf("r(V%d) = %d\n", i, retimed.vertices[i].weight);
         }
+        */
 
         to_dot(retimed, "random_circuit_retimed2.dot");
-
-        if(check_legal(graph, retimed, result.c, WD))
-            printf("- LEGAL RETIMING - \n");
-        else 
-            printf("- ILLEGAL RETIMING!!! - \n");
 
         free(retimed.vertices);
         free(retimed.edges);
     } else {
         printf("--- No retiming found --- \n");
     }
-
-    printf("original = %d\nretimed = %d\n", c, result.c);
 
     free(graph.vertices);
     free(graph.edges);
@@ -337,7 +334,7 @@ int test_random() {
 
 //Test opt1 and opt2 with n random circuits with the given amount of vertex
 void test_n_random(int n, int vertex_count) {
-    printf("- Testing %d graphs with %d vertex -\n", n, vertex_count);
+    printf("--- Testing %d graphs with %d vertex ---\n", n, vertex_count);
     for(int i = 0; i < n; ++i) {
         printf("- CIRCUIT %d -\n", i);
         Graph graph = generate_circuit(vertex_count);
@@ -390,19 +387,19 @@ void test_n_random(int n, int vertex_count) {
 }
 
 int main() {
-    //printf("------------ TEST FEAS ------------\n");
-    //test_feas();
-
-    /*
-    printf("\n\n------------ TEST OPT2 ------------\n");
-    test_opt2();
+    printf("------------ TEST FEAS ------------\n");
+    test_feas();
 
     printf("\n\n------------ TEST OPT1 ------------\n");
     test_opt1();
 
+    printf("\n\n------------ TEST OPT2 ------------\n");
+    test_opt2();
+
     printf("\n\n------------ TEST RANDOM ------------\n");
-    test_random();
-    */
+    test_random(100);
+
+    printf("\n\n------------ TEST N RANDOM ------------\n");
     test_n_random(5, 500);
 }
 

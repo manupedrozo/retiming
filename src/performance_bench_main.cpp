@@ -10,9 +10,25 @@
 #include "feas.cpp"
 #include "retiming_checker.cpp"
 
+/*
+const int graph_count = 7;
+const int graph_max_index = graph_count-1;
+
+Graph graphs[] = {
+    generate_circuit(100),
+    generate_circuit(200),
+    generate_circuit(300),
+    generate_circuit(400),
+    generate_circuit(500),
+    generate_circuit(600),
+    generate_circuit(700),
+};
+*/
+
 const int graph_count = 12;
 const int graph_max_index = graph_count-1;
 
+//Shared array of random graphs
 Graph graphs[] = {
     generate_circuit(1<<3),
     generate_circuit(1<<4),
@@ -29,6 +45,37 @@ Graph graphs[] = {
 };
 
 int retimings[graph_count];
+
+const int opt2_wc_graph_count = 7;
+const int opt2_wc_graph_max_index = opt2_wc_graph_count-1;
+
+//Generate a graph for the OPT2 worst case
+Graph generate_opt2_wc_circuit(int vertex_count) {
+    int edge_count = vertex_count;
+    Vertex *vertices = (Vertex *) malloc(sizeof(Vertex) * vertex_count);
+    Edge   *edges    = (Edge *)   malloc(sizeof(Edge) * edge_count);
+
+    vertices[0] = Vertex(vertex_count-1);
+    edges[0]    = Edge(edge_count-1, 0, 1);
+    for (int i = 1; i < vertex_count; ++i) {
+        vertices[i] = Vertex(vertex_count-i-1);
+        edges[i] = Edge(i-1, i, 0);
+    }
+
+    return Graph(vertices, edges, vertex_count, edge_count);
+}
+
+//Shared array of graphs for opt2 worst case benchmarks
+Graph opt2_wc_graphs[] = {
+    generate_opt2_wc_circuit(1<<6),
+    generate_opt2_wc_circuit(1<<7),
+    generate_opt2_wc_circuit(1<<8),
+    generate_opt2_wc_circuit(1<<9),
+    generate_opt2_wc_circuit(1<<10),
+    generate_opt2_wc_circuit(1<<11),
+    generate_opt2_wc_circuit(1<<12),
+};
+
 
 /**
  * Benchmark our blg topology algorithm usage
@@ -268,7 +315,6 @@ void BM_feas(benchmark::State& state) {
     state.SetComplexityN(graph.vertex_count * graph.edge_count);
 }
 
-
 /**
  * Benchmark opt2 algorithm
  * - O(V * E * log(V))
@@ -276,11 +322,56 @@ void BM_feas(benchmark::State& state) {
 void BM_opt2(benchmark::State& state) {
     int index = state.range(0);
     Graph graph = graphs[index];
-    //printf("vertices: %d\tedges: %d\n", graph.vertex_count, graph.edge_count);
     for(auto _ : state) {
 
         WDEntry *WD = wd(graph);
         OptResult result = opt2(graph, WD);
+
+        state.PauseTiming();
+        if(result.r) {
+            free(result.graph.vertices);
+            free(result.graph.edges);
+        }
+        free(WD);
+        state.ResumeTiming();
+    }
+    state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
+}
+
+/**
+ * Benchmark opt2 worst case
+ */
+void BM_opt2_opt2_wc(benchmark::State& state) {
+    int index = state.range(0);
+    Graph graph = opt2_wc_graphs[index];
+    printf("%d\n", graph.vertex_count);
+    for(auto _ : state) {
+
+        WDEntry *WD = wd(graph);
+        OptResult result = opt2(graph, WD);
+
+        state.PauseTiming();
+        if(result.r) {
+            free(result.graph.vertices);
+            free(result.graph.edges);
+        }
+        free(WD);
+        state.ResumeTiming();
+    }
+    state.SetComplexityN(graph.vertex_count * graph.edge_count * log(graph.vertex_count));
+}
+
+/**
+ * Benchmark opt1 with opt2 worst case
+ */
+void BM_opt1_opt2_wc(benchmark::State& state) {
+    int index = state.range(0);
+    Graph graph = opt2_wc_graphs[index];
+    printf("%d\n", graph.vertex_count);
+    for(auto _ : state) {
+
+        WDEntry *WD = wd(graph);
+        OptResult result = opt1(graph, WD);
 
         state.PauseTiming();
         if(result.r) {
@@ -305,12 +396,23 @@ BENCHMARK(BM_bellman) ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN
 BENCHMARK(BM_feas)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 BENCHMARK(BM_opt2)    ->DenseRange(0, graph_max_index)->Complexity(benchmark::oN);
 
+BENCHMARK(BM_opt2_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
+BENCHMARK(BM_opt1_opt2_wc)    ->DenseRange(0, opt2_wc_graph_max_index)->Complexity(benchmark::oN);
+
+#include "graph_printer.cpp" 
+
 //BENCHMARK_MAIN();
 int main(int argc, char** argv)
 {
     for(int i = 0; i < graph_count; ++i) {
-        printf("Graph %d: vertices: %d, edges: %d\n", i, graphs[i].vertex_count, graphs[i].edge_count);
+        int zero_edges = 0;
+        for(int j = 0; j < graphs[i].edge_count; ++j) {
+            if(graphs[i].edges[j].weight == 0)
+                ++zero_edges;
+        }
+        printf("Graph %d: vertices: %d, edges: %d, zero edges: %d\n", i, graphs[i].vertex_count, graphs[i].edge_count, zero_edges);
     }
+
     ::benchmark::Initialize(&argc, argv);
     ::benchmark::RunSpecifiedBenchmarks();
 }

@@ -53,7 +53,6 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
 #endif
 
     bool changed = true;
-    //int retime_count = 0;
 
     //repeat |V|-1 times
     int i;
@@ -70,7 +69,6 @@ FeasResult feas(Graph &graph, int target_c, int *deltas) {
                 ++retimed_vertices[v].weight; 
             }
         }
-        //if(changed) ++retime_count;
 
         //Update retimed edges
         for (int j = 0; j < edge_count; ++j) {

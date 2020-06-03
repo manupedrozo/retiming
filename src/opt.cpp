@@ -115,10 +115,12 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
 #endif
     }
 
+    //Edges to send to bellman (7.1 and 7.2)
+    std::vector<Edge> opt_edges;
+
     //Get edges for 7.1 (the same for every c)
-    Edge *opt_edges1 = (Edge *) malloc(sizeof(Edge) * edge_count);
     for (int i = 0; i < edge_count; ++i) {
-        opt_edges1[i] = Edge(edges[i].to, edges[i].from, edges[i].weight);
+        opt_edges.push_back(Edge(edges[i].to, edges[i].from, edges[i].weight));
     }
 
     int c = -1; //best c
@@ -127,7 +129,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
     int *aux_distance;//aux for swapping between distance and temp_distance
 
 #ifdef SPACEBENCH
-        space_bench->allocated(sizeof(Edge) * edge_count, true, EDGE, "opt edges for 7.1");
+        space_bench->allocated(sizeof(Edge) * edge_count, false, EDGE, "opt edges for 7.1");
         space_bench->allocated(sizeof(int) * (vertex_count+1), true, INT, "distance array");
         space_bench->allocated(sizeof(int) * (vertex_count+1), true, INT, "tmp distance array");
 #endif
@@ -147,51 +149,36 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
 #endif
 
         //Get edges for 7.2
-        std::list<Edge> opt_edges2;
         for (int u = 0; u < vertex_count; ++u) {
             for (int v = 0; v < vertex_count; ++v) {
                 entry = WD[u * vertex_count + v];
                 //check the requirements on D(u,v)
                 if(entry.D > current_c && (entry.D - vertices[u].weight <= current_c) && (entry.D - vertices[v].weight <= current_c)) {
                     //add the edge v -> u with weight W(u, v) - 1
-                    opt_edges2.push_front(Edge(v, u, entry.W - 1));
+                    opt_edges.push_back(Edge(v, u, entry.W - 1));
                 }
             }
         }
 
-        //Merge edges into a single array
-        int opt_edge_count = edge_count + opt_edges2.size();
-        //TODO: May want to resize the same opt_edges instead of fully allocating each pass
-        Edge *opt_edges = (Edge *) malloc(sizeof(Edge) * opt_edge_count);
-        int k;
-        for (k = 0; k < edge_count; ++k) {
-            opt_edges[k] = opt_edges1[k];
-        }
-
-        for (Edge edge : opt_edges2) {
-            opt_edges[k] = edge;
-            ++k;
-        } 
+#ifdef SPACEBENCH
+        space_bench->push_stack();
+        space_bench->allocated(sizeof(Edge) * (opt_edges.size() - edge_count), false, EDGE, "opt edges for 7.2");
+#endif
 
 #ifdef OPT1DEBUG
         printf("--- OPT EDGES --- \n");
-        for (int i = 0; i < opt_edge_count; ++i) {
-        printf("(%d, %d, [%d]) \n", opt_edges[i].from, opt_edges[i].to, opt_edges[i].weight);
+        for (int i = 0; i < opt_edges.size(); ++i) {
+            printf("(%d, %d, [%d]) \n", opt_edges[i].from, opt_edges[i].to, opt_edges[i].weight);
         }
 #endif
 
-        Graph opt_graph(vertices, opt_edges, vertex_count, opt_edge_count);
-
-#ifdef SPACEBENCH
-        space_bench->push_stack();
-        space_bench->allocated(sizeof(Edge) * opt_edges2.size(), false, EDGE, "opt edges for 7.2");
-        space_bench->allocated(sizeof(Edge) * opt_edge_count, true, EDGE, "merged opt edges");
-#endif
+        Graph opt_graph(vertices, &opt_edges[0], vertex_count, opt_edges.size());
 
         //Run bellman
         bool r = bellman(opt_graph, tmp_distance); 
 
-        free(opt_edges);
+        //Remove edges for 7.2
+        opt_edges.erase(opt_edges.begin() + edge_count, opt_edges.end());
 
         if(r) { 
             top = b - 1;
@@ -214,7 +201,6 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         }
 
 #ifdef SPACEBENCH
-        space_bench->deallocated(sizeof(Edge) * opt_edge_count, EDGE, "merged opt edges");
         space_bench->pop_stack();
 #endif
     }
@@ -226,8 +212,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
         //a retiming c was found, make the retimed graph and return.
 
         //Calculate edge weights of the retimed graph: wr(e) = w(e) + r(v) - r(u)
-        //Reusing opt_edges1
-        Edge *retimed_edges = opt_edges1;
+        Edge *retimed_edges = (Edge *) malloc(sizeof(Edge) * edge_count);
         for (int i = 0; i < edge_count; ++i) {
             int from = edges[i].from;
             int to = edges[i].to;
@@ -242,6 +227,7 @@ OptResult opt1(Graph &graph, WDEntry *WD) {
 
 #ifdef SPACEBENCH
         space_bench->allocated(sizeof(Vertex) * vertex_count, true, VERTEX, "retimed vertices");
+        space_bench->allocated(sizeof(Edge) * edge_count, true, EDGE, "retimed edges");
 #endif
 
         Graph retimed(retimed_vertices, retimed_edges, vertex_count, edge_count);
