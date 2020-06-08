@@ -342,7 +342,8 @@ void BM_opt2(benchmark::State& state) {
  * Benchmark opt2 worst case
  */
 void BM_opt2_opt2_wc(benchmark::State& state) {
-    araph graph = opt2_wc_graphs[index];
+    int index = state.range(0);
+    Graph graph = opt2_wc_graphs[index];
     for(auto _ : state) {
 
         WDEntry *WD = wd(graph);
